@@ -2,18 +2,16 @@
 
 use std::collections::HashMap;
 
-use crate::fl;
-use cosmic::app::{Command, Core};
-use cosmic::iced::alignment::{Horizontal, Vertical};
+use crate::core::nav::NavPage;
+use crate::{fl, pages};
+use cosmic::app::{self, Command, Core};
 use cosmic::iced::{Alignment, Length};
-use cosmic::widget::{self, icon, menu, nav_bar};
-use cosmic::{cosmic_theme, theme, Application, ApplicationExt, Apply, Element};
-
-const REPOSITORY: &str = "https://github.com/edfloreshz/cosmic-app-template";
+use cosmic::widget::{self, menu, nav_bar};
+use cosmic::{cosmic_theme, theme, Application, ApplicationExt, Element};
 
 /// This is the struct that represents your application.
 /// It is used to define the data that will be used by your application.
-pub struct YourApp {
+pub struct MoneyManager {
     /// Application state which is managed by the COSMIC runtime.
     core: Core,
     /// Display a context drawer with the designated page if defined.
@@ -31,13 +29,12 @@ pub struct YourApp {
 pub enum Message {
     LaunchUrl(String),
     ToggleContextPage(ContextPage),
-}
 
-/// Identifies a page in the application.
-pub enum Page {
-    Page1,
-    Page2,
-    Page3,
+    Accounts(pages::accounts::AccountsMessage),
+    Categories(pages::categories::CategoriesMessage),
+    Transactions(pages::transactions::TransactionMessage),
+    Statistics(pages::statistics::StatisticMessage),
+    Settings(pages::settings::SettingsMessage),
 }
 
 /// Identifies a context page to display in the context drawer.
@@ -78,14 +75,11 @@ impl menu::action::MenuAction for MenuAction {
 /// - `Flags` is the data that your application needs to use before it starts.
 /// - `Message` is the enum that contains all the possible variants that your application will need to transmit messages.
 /// - `APP_ID` is the unique identifier of your application.
-impl Application for YourApp {
+impl Application for MoneyManager {
     type Executor = cosmic::executor::Default;
-
     type Flags = ();
-
     type Message = Message;
-
-    const APP_ID: &'static str = "com.example.CosmicAppTemplate";
+    const APP_ID: &'static str = "com.demo.CosmicMoney";
 
     fn core(&self) -> &Core {
         &self.core
@@ -110,23 +104,20 @@ impl Application for YourApp {
     fn init(core: Core, _flags: Self::Flags) -> (Self, Command<Self::Message>) {
         let mut nav = nav_bar::Model::default();
 
-        nav.insert()
-            .text("Page 1")
-            .data::<Page>(Page::Page1)
-            .icon(icon::from_name("applications-science-symbolic"))
-            .activate();
+        for &nav_page in NavPage::all() {
+            let id = nav
+                .insert()
+                //.icon(nav_page.icon())
+                .text(nav_page.title())
+                .data::<NavPage>(nav_page)
+                .id();
 
-        nav.insert()
-            .text("Page 2")
-            .data::<Page>(Page::Page2)
-            .icon(icon::from_name("applications-system-symbolic"));
+            if nav_page == NavPage::default() {
+                nav.activate(id);
+            }
+        }
 
-        nav.insert()
-            .text("Page 3")
-            .data::<Page>(Page::Page3)
-            .icon(icon::from_name("applications-games-symbolic"));
-
-        let mut app = YourApp {
+        let mut app = MoneyManager {
             core,
             context_page: ContextPage::default(),
             key_binds: HashMap::new(),
@@ -158,24 +149,30 @@ impl Application for YourApp {
     ///
     /// To get a better sense of which widgets are available, check out the `widget` module.
     fn view(&self) -> Element<Self::Message> {
-        widget::text::title1(fl!("welcome"))
-            .apply(widget::container)
+        let spacing = cosmic::theme::active().cosmic().spacing;
+        let entity = self.nav.active();
+        let nav_page = self.nav.data::<NavPage>(entity).unwrap_or_default();
+
+        widget::column::with_children(vec![nav_page.view()])
+            .padding(spacing.space_xs)
             .width(Length::Fill)
             .height(Length::Fill)
-            .align_x(Horizontal::Center)
-            .align_y(Vertical::Center)
+            .align_items(Alignment::Center)
             .into()
     }
 
     /// Application messages are handled here. The application state can be modified based on
     /// what message was received. Commands may be returned for asynchronous execution on a
     /// background thread managed by the application's executor.
-    fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
+    fn update(
+        &mut self,
+        message: Self::Message,
+    ) -> cosmic::iced::Command<app::Message<Self::Message>> {
+        let mut commands = vec![];
         match message {
             Message::LaunchUrl(url) => {
                 let _result = open::that_detached(url);
             }
-
             Message::ToggleContextPage(context_page) => {
                 if self.context_page == context_page {
                     // Close the context drawer if the toggled context page is the same.
@@ -189,8 +186,33 @@ impl Application for YourApp {
                 // Set the title of the context drawer.
                 self.set_context_title(context_page.title());
             }
+            Message::Accounts(message) => commands.push(
+                pages::accounts::Accounts::default()
+                    .update(message)
+                    .map(cosmic::app::Message::App),
+            ),
+            Message::Settings(message) => commands.push(
+                pages::settings::Settings::default()
+                    .update(message)
+                    .map(cosmic::app::Message::App),
+            ),
+            Message::Categories(message) => commands.push(
+                pages::categories::Categories::default()
+                    .update(message)
+                    .map(cosmic::app::Message::App),
+            ),
+            Message::Transactions(message) => commands.push(
+                pages::transactions::Transactions::default()
+                    .update(message)
+                    .map(cosmic::app::Message::App),
+            ),
+            Message::Statistics(message) => commands.push(
+                pages::statistics::Statistics::default()
+                    .update(message)
+                    .map(cosmic::app::Message::App),
+            ),
         }
-        Command::none()
+        Command::batch(commands)
     }
 
     /// Display a context drawer if the context page is requested.
@@ -213,7 +235,7 @@ impl Application for YourApp {
     }
 }
 
-impl YourApp {
+impl MoneyManager {
     /// The about page for this app.
     pub fn about(&self) -> Element<Message> {
         let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
@@ -225,8 +247,8 @@ impl YourApp {
 
         let title = widget::text::title3(fl!("app-title"));
 
-        let link = widget::button::link(REPOSITORY)
-            .on_press(Message::LaunchUrl(REPOSITORY.to_string()))
+        let link = widget::button::link("link")
+            .on_press(Message::LaunchUrl("link".to_string()))
             .padding(0);
 
         widget::column()
