@@ -14,3 +14,5 @@ page_transactions = Transactions
 page_stats = Statistics
 page_settings = Settings
 
+add_account = Add account
+

@@ -1,35 +1,53 @@
 use cosmic::{
-    iced,
-    widget::{self},
+    iced::{self, Length},
+    widget::{self, column, settings},
     Command, Element,
 };
+
+use crate::fl;
 
 #[derive(Debug, Clone)]
 pub enum AccountsMessage {
     TempMessage,
 }
 
-pub struct Accounts {}
+pub struct Accounts {
+    accounts: Vec<String>,
+}
 
 impl Default for Accounts {
+    // Initialize default
     fn default() -> Self {
-        Self {}
+        Self {
+            accounts: vec!["Conto corrente".to_string(), "Libretto".to_string()],
+        }
     }
 }
 
 impl Accounts {
-    pub fn init() {
-        log::info!("Init accounts")
-    }
-    
     pub fn view<'a>(&self) -> Element<'a, AccountsMessage> {
-        let button =
-            cosmic::widget::button::text("test button").on_press(AccountsMessage::TempMessage);
+        let mut col = column::<AccountsMessage>().push(widget::text::title1(fl!("page_accounts")));
 
-        widget::container(button)
+        col = col.push(
+            widget::container(
+                cosmic::widget::button::text(fl!("add_account"))
+                    .on_press(AccountsMessage::TempMessage),
+            )
+            .width(iced::Length::Fill)
+            .align_x(iced::alignment::Horizontal::Right),
+        );
+
+        for account in &self.accounts {
+            col = col
+                .push(settings::section().title(account.to_string()).add(
+                    widget::row().push(widget::text::text(format!("{}: {} {}", "Balance", 10, "$"))),
+                ))
+                .push(widget::vertical_space(Length::from(20)))
+        }
+
+        widget::container(col)
             .width(iced::Length::Fill)
             .height(iced::Length::Shrink)
-            .center_x()
             .center_y()
             .into()
     }
