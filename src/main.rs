@@ -12,6 +12,7 @@ mod pages;
 /// - `()` is the flags that your app needs to use before it starts.
 ///  If your app does not need any flags, you can pass in `()`.
 fn main() -> cosmic::iced::Result {
+    env_logger::init();
     let settings = cosmic::app::Settings::default();
     cosmic::app::run::<MoneyManager>(settings, ())
 }

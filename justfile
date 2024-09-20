@@ -62,7 +62,7 @@ dev *args:
 
 # Run with debug logs
 run *args:
-    env RUST_LOG=cosmic_tasks=info RUST_BACKTRACE=full cargo run --release {{args}}
+    env RUST_LOG=cosmic_money=info RUST_BACKTRACE=full cargo run --release {{args}}
 
 # Installs files
 install:

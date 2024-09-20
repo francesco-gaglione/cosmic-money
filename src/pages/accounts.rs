@@ -18,6 +18,10 @@ impl Default for Accounts {
 }
 
 impl Accounts {
+    pub fn init() {
+        log::info!("Init accounts")
+    }
+    
     pub fn view<'a>(&self) -> Element<'a, AccountsMessage> {
         let button =
             cosmic::widget::button::text("test button").on_press(AccountsMessage::TempMessage);
@@ -33,7 +37,7 @@ impl Accounts {
     pub fn update(&mut self, message: AccountsMessage) -> Command<crate::app::Message> {
         match message {
             AccountsMessage::TempMessage => {
-                println!("temp message");
+                log::info!("temp logs");
             }
         }
         Command::none()
