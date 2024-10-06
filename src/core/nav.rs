@@ -8,7 +8,6 @@ pub enum NavPage {
     Accounts,
     Categories,
     Transactions,
-    Statistics,
     Settings,
 }
 
@@ -24,28 +23,16 @@ impl NavPage {
             Self::Accounts => fl!("page_accounts"),
             Self::Categories => fl!("page_categories"),
             Self::Transactions => fl!("page_transactions"),
-            Self::Statistics => fl!("page_stats"),
             Self::Settings => fl!("page_settings"),
         }
     }
 
-    pub fn view<'a>(&self) -> Element<'a, app::Message> {
+    pub fn view<'a>(&self, app: &'a app::MoneyManager) -> Element<'a, app::Message> {
         match self {
-            NavPage::Accounts => pages::accounts::Accounts::default()
-                .view()
-                .map(app::Message::Accounts),
-            NavPage::Categories => pages::categories::Categories::default()
-                .view()
-                .map(app::Message::Categories),
-            NavPage::Transactions => pages::transactions::Transactions::default()
-                .view()
-                .map(app::Message::Transactions),
-            NavPage::Statistics => pages::statistics::Statistics::default()
-                .view()
-                .map(app::Message::Statistics),
-            NavPage::Settings => pages::settings::Settings::default()
-                .view()
-                .map(app::Message::Settings),
+            NavPage::Accounts => app.accounts.view().map(app::Message::Accounts),
+            NavPage::Categories => app.categories.view().map(app::Message::Categories),
+            NavPage::Transactions => app.transactions.view().map(app::Message::Transactions),
+            NavPage::Settings => app.settings.view().map(app::Message::Settings),
         }
     }
 
@@ -54,7 +41,6 @@ impl NavPage {
             Self::Accounts,
             Self::Categories,
             Self::Transactions,
-            Self::Statistics,
             Self::Settings,
         ]
     }

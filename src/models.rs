@@ -8,6 +8,7 @@ pub struct Account {
     pub id: i32,
     pub name: String,
     pub account_type: String,
+    pub initial_balance: f32
 }
 
 #[derive(Insertable)]
@@ -15,4 +16,5 @@ pub struct Account {
 pub struct NewAccount<'a> {
     pub name: &'a str,
     pub account_type: &'a str,
+    pub initial_balance: f32
 }

@@ -5,6 +5,7 @@ welcome = Welcome to COSMIC! ✨
 
 save = Save
 cancel = Cancel
+add = Add
 color-scheme-name = placeholder
 save-current-color-scheme = save placeholder
 
@@ -14,5 +15,9 @@ page_transactions = Transactions
 page_stats = Statistics
 page_settings = Settings
 
-add_account = Add account
-
+add-account = Add account
+new-account = New account
+account-name = Account name
+bank-account = Bank account
+initial-value = Initial value
+no-elements = No elements in this list

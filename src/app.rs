@@ -20,6 +20,11 @@ pub struct MoneyManager {
     key_binds: HashMap<menu::KeyBind, MenuAction>,
     /// A model that contains all of the pages assigned to the nav bar panel.
     nav: nav_bar::Model,
+
+    pub accounts: pages::accounts::Accounts,
+    pub categories: pages::categories::Categories,
+    pub settings: pages::settings::Settings,
+    pub transactions: pages::transactions::Transactions,
 }
 
 /// This is the enum that contains all the possible variants that your application will need to transmit messages.
@@ -33,7 +38,6 @@ pub enum Message {
     Accounts(pages::accounts::AccountsMessage),
     Categories(pages::categories::CategoriesMessage),
     Transactions(pages::transactions::TransactionMessage),
-    Statistics(pages::statistics::StatisticMessage),
     Settings(pages::settings::SettingsMessage),
 }
 
@@ -122,6 +126,10 @@ impl Application for MoneyManager {
             context_page: ContextPage::default(),
             key_binds: HashMap::new(),
             nav,
+            accounts: pages::accounts::Accounts::default(),
+            categories: pages::categories::Categories::default(),
+            settings: pages::settings::Settings::default(),
+            transactions: pages::transactions::Transactions::default(),
         };
 
         let command = app.update_titles();
@@ -153,7 +161,7 @@ impl Application for MoneyManager {
         let entity = self.nav.active();
         let nav_page = self.nav.data::<NavPage>(entity).unwrap_or_default();
 
-        widget::column::with_children(vec![nav_page.view()])
+        widget::column::with_children(vec![nav_page.view(self)])
             .padding(spacing.space_xs)
             .width(Length::Fill)
             .height(Length::Fill)
@@ -186,28 +194,19 @@ impl Application for MoneyManager {
                 // Set the title of the context drawer.
                 self.set_context_title(context_page.title());
             }
-            Message::Accounts(message) => commands.push(
-                pages::accounts::Accounts::default()
-                    .update(message)
-                    .map(cosmic::app::Message::App),
-            ),
-            Message::Settings(message) => commands.push(
-                pages::settings::Settings::default()
-                    .update(message)
-                    .map(cosmic::app::Message::App),
-            ),
+            Message::Accounts(message) => {
+                commands.push(self.accounts.update(message).map(cosmic::app::Message::App))
+            }
+            Message::Settings(message) => {
+                commands.push(self.settings.update(message).map(cosmic::app::Message::App))
+            }
             Message::Categories(message) => commands.push(
-                pages::categories::Categories::default()
+                self.categories
                     .update(message)
                     .map(cosmic::app::Message::App),
             ),
             Message::Transactions(message) => commands.push(
-                pages::transactions::Transactions::default()
-                    .update(message)
-                    .map(cosmic::app::Message::App),
-            ),
-            Message::Statistics(message) => commands.push(
-                pages::statistics::Statistics::default()
+                self.transactions
                     .update(message)
                     .map(cosmic::app::Message::App),
             ),

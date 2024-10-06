@@ -23,14 +23,9 @@ impl Default for Store {
 }
 
 impl Store {
-    pub fn create_account(&mut self) -> Result<(), String> {
-        let new_account = NewAccount {
-            name: "test",
-            account_type: "test",
-        };
-
+    pub fn create_account(&mut self, new_account: &NewAccount) -> Result<(), String> {
         let res = diesel::insert_into(account::table)
-            .values(&new_account)
+            .values(new_account)
             .returning(Account::as_returning())
             .get_result(&mut self.connection)
             .expect("Error saving new post");
@@ -44,13 +39,6 @@ impl Store {
             .load(&mut self.connection)
             .expect("Error loading posts");
 
-        println!("Displaying {} posts", results.len());
-        for post in results {
-            println!("{}", post.name);
-            println!("-----------\n");
-            println!("{}", post.account_type);
-        }
-
-        Ok(Vec::new())
+        Ok(results)
     }
 }

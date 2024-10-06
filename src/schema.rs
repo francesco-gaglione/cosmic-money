@@ -5,5 +5,6 @@ diesel::table! {
         id -> Integer,
         name -> Text,
         account_type -> Text,
+        initial_balance -> Float,
     }
 }

@@ -1,5 +1,6 @@
 CREATE TABLE account (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   name VARCHAR NOT NULL,
-  account_type VARCHAR NOT NULL
+  account_type VARCHAR NOT NULL,
+  initial_balance REAL NOT NULL DEFAULT 0
 )
