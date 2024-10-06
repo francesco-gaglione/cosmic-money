@@ -4,7 +4,7 @@ use cosmic::{
     Command, Element,
 };
 
-use crate::fl;
+use crate::{fl, STORE};
 
 #[derive(Debug, Clone)]
 pub enum AccountsMessage {
@@ -56,6 +56,9 @@ impl Accounts {
         match message {
             AccountsMessage::TempMessage => {
                 log::info!("temp logs");
+                let mut store = STORE.lock().unwrap();
+                store.create_account();
+                store.get_accounts();
             }
         }
         Command::none()
