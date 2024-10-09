@@ -111,7 +111,7 @@ impl Application for MoneyManager {
         for &nav_page in NavPage::all() {
             let id = nav
                 .insert()
-                //.icon(nav_page.icon())
+                .icon(nav_page.icon())
                 .text(nav_page.title())
                 .data::<NavPage>(nav_page)
                 .id();

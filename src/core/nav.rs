@@ -1,4 +1,4 @@
-use cosmic::Element;
+use cosmic::{widget::icon, Element};
 
 use crate::{app, fl, pages};
 
@@ -24,6 +24,15 @@ impl NavPage {
             Self::Categories => fl!("page_categories"),
             Self::Transactions => fl!("page_transactions"),
             Self::Settings => fl!("page_settings"),
+        }
+    }
+
+    pub fn icon(&self) -> cosmic::widget::Icon {
+        match self {
+            NavPage::Accounts => icon::from_name("contact-new-symbolic").into(),
+            NavPage::Categories => icon::from_name("sidebar-places-symbolic").into(),
+            NavPage::Transactions => icon::from_name("network-transmit-receive-symbolic").into(),
+            NavPage::Settings => icon::from_name("application-default-symbolic").into(),
         }
     }
 
