@@ -13,6 +13,7 @@ mod pages;
 mod store;
 mod models;
 mod schema;
+mod errors;
 
 static STORE: Lazy<Mutex<Store>> = Lazy::new(|| Mutex::new(Store::default()));
 

@@ -8,3 +8,15 @@ diesel::table! {
         initial_balance -> Float,
     }
 }
+
+diesel::table! {
+    category (id) {
+        id -> Integer,
+        name -> Text,
+    }
+}
+
+diesel::allow_tables_to_appear_in_same_query!(
+    account,
+    category,
+);
