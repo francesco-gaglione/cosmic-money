@@ -20,7 +20,7 @@ pub struct NewAccount<'a> {
     pub initial_balance: f32,
 }
 
-#[derive(Queryable, Selectable)]
+#[derive(Queryable, Selectable, Debug)]
 #[diesel(table_name = crate::schema::category)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Category {

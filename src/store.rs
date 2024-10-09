@@ -53,6 +53,8 @@ impl Store {
         let results = category
             .select(Category::as_select())
             .load(&mut self.connection);
+        
+        log::info!("results: {:?}", results);
 
         match results {
             Ok(results) => return Ok(results),

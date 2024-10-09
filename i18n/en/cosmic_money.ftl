@@ -21,3 +21,8 @@ account-name = Account name
 bank-account = Bank account
 initial-value = Initial value
 no-elements = No elements in this list
+
+view-settings = View settings
+add-category = Add category
+new-category = New category
+category-name = Category name
