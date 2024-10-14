@@ -17,6 +17,7 @@ CREATE TABLE money_transaction (
   description VARCHAR NOT NULL,
   amount REAL NOT NULL,
   transaction_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  is_expense BOOLEAN DEFAULT TRUE NOT NULL,
   FOREIGN KEY (bank_account) REFERENCES account(id),
   FOREIGN KEY (transaction_category) REFERENCES category(id)
 );

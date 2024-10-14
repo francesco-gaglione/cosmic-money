@@ -16,7 +16,7 @@ impl Default for Settings {
 
 impl Settings {
     pub fn view<'a>(&self) -> Element<'a, SettingsMessage> {
-        widget::text("settings page").into()
+        widget::text("settings page WIP").into()
     }
     
     pub fn update(&mut self, message: SettingsMessage) -> Command<crate::app::Message> {

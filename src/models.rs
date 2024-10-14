@@ -57,6 +57,7 @@ pub struct MoneyTransaction {
     pub description: String,
     pub amount: f32,
     pub transaction_date: chrono::NaiveDateTime,
+    pub is_expense: bool,
 }
 
 #[derive(Insertable)]
@@ -67,4 +68,5 @@ pub struct NewMoneyTransaction {
     pub description: String,
     pub amount: f32,
     pub transaction_date: chrono::NaiveDateTime,
+    pub is_expense: bool,
 }

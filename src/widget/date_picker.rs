@@ -1,4 +1,4 @@
-use chrono::{Datelike, Local, NaiveDate, NaiveDateTime, TimeZone, Timelike, Utc};
+use chrono::{Datelike, Local, NaiveDateTime, TimeZone, Timelike, Utc};
 use cosmic::{widget, Element};
 
 const DAYS: [&str; 31] = [

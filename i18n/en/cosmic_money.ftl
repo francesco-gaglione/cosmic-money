@@ -1,7 +1,6 @@
-app-title = COSMIC App Template
+app-title = Cosmic money
 about = About
 view = View
-welcome = Welcome to COSMIC! ✨
 
 save = Save
 cancel = Cancel

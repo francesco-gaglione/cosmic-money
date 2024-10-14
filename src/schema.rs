@@ -24,6 +24,7 @@ diesel::table! {
         description -> Text,
         amount -> Float,
         transaction_date -> Timestamp,
+        is_expense -> Bool,
     }
 }
 
