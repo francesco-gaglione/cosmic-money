@@ -12,7 +12,12 @@ rust-embed = "8.3.0"
 tokio = { version = "1.37.0", features = ["full"] }
 env_logger = "0.11"
 log = "0.4"
-diesel = { version = "2.2.0", features = ["sqlite", "returning_clauses_for_sqlite_3_35"] }
+diesel = { version = "2.2.0", features = [
+    "sqlite",
+    "chrono",
+    "returning_clauses_for_sqlite_3_35",
+] }
+chrono = "0.4.38"
 # build libsqlite3 as part of the build process
 # uncomment this line if you run into setup issues
 # libsqlite3-sys = { version = "0.30", features = ["bundled"] }
@@ -48,8 +53,20 @@ depends = "$auto"
 section = "utility"
 priority = "optional"
 assets = [
-    ["target/release/cosmic-app-template", "usr/bin/cosmic-app-template", "755"],
-    ["res/com.example.CosmicAppTemplate.metainfo.xml", "usr/share/metainfo/com.example.CosmicAppTemplate.metainfo.xml", "644"],
-    ["res/com.example.CosmicAppTemplate.desktop", "usr/share/applications/com.example.CosmicAppTemplate.desktop", "644"],
-#    ["res/icons/hicolor/", "usr/share/icons/hicolor/", "644"]
+    [
+        "target/release/cosmic-app-template",
+        "usr/bin/cosmic-app-template",
+        "755",
+    ],
+    [
+        "res/com.example.CosmicAppTemplate.metainfo.xml",
+        "usr/share/metainfo/com.example.CosmicAppTemplate.metainfo.xml",
+        "644",
+    ],
+    [
+        "res/com.example.CosmicAppTemplate.desktop",
+        "usr/share/applications/com.example.CosmicAppTemplate.desktop",
+        "644",
+    ],
+    #    ["res/icons/hicolor/", "usr/share/icons/hicolor/", "644"]
 ]

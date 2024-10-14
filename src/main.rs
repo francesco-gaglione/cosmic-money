@@ -14,6 +14,7 @@ mod store;
 mod models;
 mod schema;
 mod errors;
+mod widget;
 
 static STORE: Lazy<Mutex<Store>> = Lazy::new(|| Mutex::new(Store::default()));
 

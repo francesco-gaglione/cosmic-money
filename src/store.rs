@@ -1,13 +1,14 @@
 use crate::{
     errors::DataStoreError,
     models::{self, Account, NewAccount},
-    schema::{self, account, category},
+    schema::{self, account, category, money_transaction},
 };
 use diesel::prelude::*;
 use diesel::{Connection, RunQueryDsl, SelectableHelper, SqliteConnection};
 use models::*;
 use schema::account::dsl::*;
 use schema::category::dsl::*;
+use schema::money_transaction::dsl::*;
 use std::env;
 
 pub struct Store {
@@ -53,7 +54,7 @@ impl Store {
         let results = category
             .select(Category::as_select())
             .load(&mut self.connection);
-        
+
         log::info!("results: {:?}", results);
 
         match results {
@@ -66,6 +67,33 @@ impl Store {
         let res = diesel::insert_into(category::table)
             .values(new_category)
             .returning(Category::as_returning())
+            .get_result(&mut self.connection);
+
+        if let Err(e) = res {
+            return Err(DataStoreError::InsertError(e.to_string()));
+        }
+
+        Ok(())
+    }
+
+    pub fn get_money_transactions(&mut self) -> Result<Vec<MoneyTransaction>, DataStoreError> {
+        let results = money_transaction
+            .select(MoneyTransaction::as_select())
+            .load(&mut self.connection);
+
+        match results {
+            Ok(results) => return Ok(results),
+            Err(e) => return Err(DataStoreError::QueryError(e.to_string())),
+        }
+    }
+
+    pub fn create_money_transaction(
+        &mut self,
+        new_money_transaction: &NewMoneyTransaction,
+    ) -> Result<(), DataStoreError> {
+        let res = diesel::insert_into(money_transaction::table)
+            .values(new_money_transaction)
+            .returning(MoneyTransaction::as_returning())
             .get_result(&mut self.connection);
 
         if let Err(e) = res {

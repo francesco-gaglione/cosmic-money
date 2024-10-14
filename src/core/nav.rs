@@ -1,6 +1,6 @@
 use cosmic::{widget::icon, Element};
 
-use crate::{app, fl, pages};
+use crate::{app, fl};
 
 #[derive(Clone, Copy, Default, Debug, Eq, PartialEq)]
 pub enum NavPage {

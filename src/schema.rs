@@ -16,7 +16,22 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    money_transaction (id) {
+        id -> Integer,
+        bank_account -> Integer,
+        transaction_category -> Integer,
+        description -> Text,
+        amount -> Float,
+        transaction_date -> Timestamp,
+    }
+}
+
+diesel::joinable!(money_transaction -> account (bank_account));
+diesel::joinable!(money_transaction -> category (transaction_category));
+
 diesel::allow_tables_to_appear_in_same_query!(
     account,
     category,
+    money_transaction,
 );

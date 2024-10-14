@@ -26,3 +26,13 @@ view-settings = View settings
 add-category = Add category
 new-category = New category
 category-name = Category name
+
+transactions = Transactions
+add-transaction = Add transaction
+category = Category
+amount = Amount
+income = Income
+expense = Expense
+note = Note
+not-found = Not found
+date = Date

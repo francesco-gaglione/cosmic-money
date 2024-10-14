@@ -10,7 +10,18 @@ CREATE TABLE category (
   name VARCHAR NOT NULL
 );
 
-INSERT INTO account (name, account_type, initial_balance) 
+CREATE TABLE money_transaction (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  bank_account INTEGER NOT NULL,
+  transaction_category INTEGER NOT NULL,
+  description VARCHAR NOT NULL,
+  amount REAL NOT NULL,
+  transaction_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  FOREIGN KEY (bank_account) REFERENCES account(id),
+  FOREIGN KEY (transaction_category) REFERENCES category(id)
+);
+
+INSERT INTO account (name, account_type, initial_balance)
 VALUES ('Checking Account', 'Bank', 1000.00);
 
 INSERT INTO category (name) VALUES ('Groceries');

@@ -1,5 +1,6 @@
 use crate::schema::account;
 use crate::schema::category;
+use crate::schema::money_transaction;
 use diesel::prelude::*;
 
 #[derive(Queryable, Selectable)]
@@ -10,6 +11,12 @@ pub struct Account {
     pub name: String,
     pub account_type: String,
     pub initial_balance: f32,
+}
+
+impl AsRef<str> for Account {
+    fn as_ref(&self) -> &str {
+        &self.name
+    }
 }
 
 #[derive(Insertable)]
@@ -28,8 +35,36 @@ pub struct Category {
     pub name: String,
 }
 
+impl AsRef<str> for Category {
+    fn as_ref(&self) -> &str {
+        &self.name
+    }
+}
+
 #[derive(Insertable)]
 #[diesel(table_name = category)]
 pub struct NewCategory<'a> {
     pub name: &'a str,
+}
+
+#[derive(Queryable, Selectable, Debug)]
+#[diesel(table_name = crate::schema::money_transaction)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct MoneyTransaction {
+    pub id: i32,
+    pub bank_account: i32, // Foreign key referencing the 'account' table
+    pub transaction_category: i32, // Foreign key referencing the 'category' table
+    pub description: String,
+    pub amount: f32,
+    pub transaction_date: chrono::NaiveDateTime,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = money_transaction)]
+pub struct NewMoneyTransaction {
+    pub bank_account: i32,
+    pub transaction_category: i32,
+    pub description: String,
+    pub amount: f32,
+    pub transaction_date: chrono::NaiveDateTime,
 }
