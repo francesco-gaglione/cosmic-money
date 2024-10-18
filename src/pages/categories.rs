@@ -1,9 +1,12 @@
+use chrono::{Datelike, Duration, Local, NaiveDate};
 use cosmic::{
-    iced::{Alignment, Length},
-    widget, Command, Element,
+    iced::{Alignment, Length, Padding},
+    widget::{self, horizontal_space},
+    Command, Element,
 };
 
 use crate::{
+    app::Message,
     fl,
     models::{Category, NewCategory},
     STORE,
@@ -11,21 +14,27 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub enum CategoriesMessage {
+    Update,
     AddCategory,
     NewCategoryNameChanged(String),
     NewCategorySubmitted,
+    PreviousMonth,
+    NextMonth,
 }
 
 pub struct Categories {
     categories: Vec<Category>,
     add_category_view: bool,
     form_new_category_name: String,
+    view_month: u32,
+    view_year: i32,
 }
 
 impl Default for Categories {
     fn default() -> Self {
         let mut store = STORE.lock().unwrap();
         let categories = store.get_categories();
+        let now = Local::now();
         Self {
             categories: if let Ok(cat) = categories {
                 cat
@@ -34,6 +43,8 @@ impl Default for Categories {
             },
             add_category_view: false,
             form_new_category_name: "".to_string(),
+            view_month: now.month(),
+            view_year: now.year(),
         }
     }
 }
@@ -54,17 +65,11 @@ impl Categories {
                 .push(
                     widget::column()
                         .push(
-                            widget::row()
-                                .push(
-                                    widget::button::text(fl!("view-settings"))
-                                        .style(widget::button::Style::Standard),
-                                )
-                                .push(widget::horizontal_space(5))
-                                .push(
-                                    widget::button::text(fl!("add-category"))
-                                        .on_press(CategoriesMessage::AddCategory)
-                                        .style(widget::button::Style::Suggested),
-                                ),
+                            widget::row().push(
+                                widget::button::text(fl!("add-category"))
+                                    .on_press(CategoriesMessage::AddCategory)
+                                    .style(widget::button::Style::Suggested),
+                            ),
                         )
                         .width(Length::Fill)
                         .align_items(Alignment::End),
@@ -113,6 +118,51 @@ impl Categories {
             element = element.push(widget::vertical_space(Length::from(10)));
         }
 
+        let month_names = vec![
+            fl!("month-1"),  // January
+            fl!("month-2"),  // February
+            fl!("month-3"),  // March
+            fl!("month-4"),  // April
+            fl!("month-5"),  // May
+            fl!("month-6"),  // June
+            fl!("month-7"),  // July
+            fl!("month-8"),  // August
+            fl!("month-9"),  // September
+            fl!("month-10"), // October
+            fl!("month-11"), // November
+            fl!("month-12"), // December
+        ];
+
+        element = element.push(
+            widget::column()
+                .push(
+                    widget::row()
+                        .push(
+                            widget::button::icon(widget::icon::from_name("go-previous-symbolic"))
+                                .on_press(CategoriesMessage::PreviousMonth),
+                        )
+                        .push(horizontal_space(Length::from(10)))
+                        .push(
+                            widget::container(
+                                widget::row()
+                                    .push(widget::text::text(
+                                        month_names[self.view_month as usize - 1].clone(),
+                                    ))
+                                    .push(horizontal_space(Length::from(5)))
+                                    .push(widget::text::text(self.view_year.to_string())),
+                            )
+                            .padding(Padding::from(7)),
+                        )
+                        .push(horizontal_space(Length::from(10)))
+                        .push(
+                            widget::button::icon(widget::icon::from_name("go-next-symbolic"))
+                                .on_press(CategoriesMessage::NextMonth),
+                        ),
+                )
+                .align_items(Alignment::Center)
+                .width(Length::Fill),
+        );
+
         element = element.push(widget::vertical_space(Length::from(10)));
 
         log::info!("categories: {:?}", self.categories);
@@ -130,7 +180,9 @@ impl Categories {
                             )
                             .push(
                                 widget::column()
-                                    .push(widget::text::text("calculate$"))
+                                    .push(widget::text::text(
+                                        self.calculate_by_category_id(c.id).to_string(),
+                                    ))
                                     .align_items(Alignment::End)
                                     .width(Length::Fill),
                             ),
@@ -145,7 +197,15 @@ impl Categories {
     }
 
     pub fn update(&mut self, message: CategoriesMessage) -> Command<crate::app::Message> {
+        let mut commands = vec![];
         match message {
+            CategoriesMessage::Update => {
+                let mut store = STORE.lock().unwrap();
+                let categories = store.get_categories();
+                if let Ok(categories) = categories {
+                    self.categories = categories;
+                }
+            }
             CategoriesMessage::AddCategory => {
                 self.add_category_view = true;
             }
@@ -160,9 +220,52 @@ impl Categories {
                 store.create_category(&new_category);
                 self.add_category_view = false;
                 self.form_new_category_name = "".to_string();
-                //TODO update categories
+                commands.push(Command::perform(async {}, |_| {
+                    Message::Categories(super::categories::CategoriesMessage::Update)
+                }));
+            }
+            CategoriesMessage::PreviousMonth => {
+                if self.view_month == 1 {
+                    self.view_month = 12;
+                    self.view_year -= 1;
+                } else {
+                    self.view_month -= 1;
+                }
+            }
+            CategoriesMessage::NextMonth => {
+                if self.view_month == 12 {
+                    self.view_month = 1;
+                    self.view_year += 1;
+                } else {
+                    self.view_month += 1;
+                }
             }
         }
-        Command::none()
+        Command::batch(commands)
+    }
+
+    fn calculate_by_category_id(&self, category_id: i32) -> f32 {
+        let mut store = STORE.lock().unwrap();
+        let (start_date, end_date) = self.get_month_start_and_end();
+        match store.calculate_expense_by_category(category_id, &start_date, &end_date) {
+            Ok(val) => val,
+            Err(_) => 0.,
+        }
+    }
+
+    fn get_month_start_and_end(&self) -> (NaiveDate, NaiveDate) {
+        let month_start = NaiveDate::from_ymd_opt(self.view_year, self.view_month, 1)
+            .expect("Data non valida per l'inizio del mese");
+
+        let next_month = if self.view_month == 12 {
+            NaiveDate::from_ymd_opt((self.view_month + 1) as i32, 1, 1)
+        } else {
+            NaiveDate::from_ymd_opt(self.view_year, self.view_month + 1, 1)
+        }
+        .expect("Data non valida per il primo giorno del mese successivo");
+
+        let month_end = next_month - Duration::days(1);
+
+        (month_start, month_end)
     }
 }
