@@ -25,6 +25,7 @@ view-settings = View settings
 add-category = Add category
 new-category = New category
 category-name = Category name
+category-type = Category type
 
 transactions = Transactions
 add-transaction = Add transaction

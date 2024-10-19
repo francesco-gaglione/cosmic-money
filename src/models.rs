@@ -45,6 +45,7 @@ impl AsRef<str> for Category {
 #[diesel(table_name = category)]
 pub struct NewCategory<'a> {
     pub name: &'a str,
+    pub is_income: bool
 }
 
 #[derive(Queryable, Selectable, Debug)]
