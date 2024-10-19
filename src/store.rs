@@ -4,7 +4,6 @@ use crate::{
     schema::{self, account, category, money_transaction},
 };
 use chrono::NaiveDate;
-use diesel::dsl::sum;
 use diesel::prelude::*;
 use diesel::{Connection, RunQueryDsl, SelectableHelper, SqliteConnection};
 use models::*;
@@ -50,6 +49,34 @@ impl Store {
             Ok(results) => return Ok(results),
             Err(e) => return Err(DataStoreError::QueryError(e.to_string())),
         }
+    }
+
+    pub fn get_account_balance(&mut self, account_id: i32) -> Result<f32, DataStoreError> {
+        // read account initial balance
+        let target_initial_balance = account
+            .filter(account::id.eq(account_id))
+            .select(account::initial_balance)
+            .first::<f32>(&mut self.connection);
+
+        let mut total: f32 = target_initial_balance.unwrap_or(0.);
+
+        // read all transaction on that account
+        let transactions = money_transaction
+            .filter(money_transaction::bank_account.eq(account_id))
+            .select(MoneyTransaction::as_select())
+            .load(&mut self.connection);
+
+        if let Ok(transactions) = transactions {
+            for t in transactions {
+                if t.is_expense {
+                    total -= t.amount;
+                } else {
+                    total += t.amount;
+                }
+            }
+        }
+
+        Ok(total)
     }
 
     pub fn get_categories(&mut self) -> Result<Vec<Category>, DataStoreError> {
