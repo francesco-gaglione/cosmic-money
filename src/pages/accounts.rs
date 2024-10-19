@@ -66,12 +66,14 @@ impl Accounts {
         if self.accounts.len() > 0 {
             for account in &self.accounts {
                 col = col
-                    .push(
-                        settings::section().title(account.name.to_string()).add(
-                            widget::row()
-                                .push(widget::text::text(format!("{}: {} {}", "Balance", 10, "$"))), //TODO a partire dall'initial value vai a sommare tutte le transazioni che riguardano questo conto e calcola quindi il bilancio
-                        ),
-                    )
+                    .push(settings::section().title(account.name.to_string()).add(
+                        widget::row().push(widget::text::text(format!(
+                            "{}: {} {}",
+                            "Balance",
+                            self.read_account_balance(account.id),
+                            "$"
+                        ))),
+                    ))
                     .push(widget::vertical_space(Length::from(20)))
             }
         } else {
@@ -202,5 +204,14 @@ impl Accounts {
             }
         }
         Command::batch(commands)
+    }
+
+    fn read_account_balance(&self, account_id: i32) -> f32 {
+        let mut store = STORE.lock().unwrap();
+        if let Ok(balance) = store.get_account_balance(account_id) {
+            balance
+        } else {
+            0.
+        }
     }
 }
