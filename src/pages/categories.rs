@@ -18,6 +18,7 @@ pub enum CategoriesMessage {
     AddCategory,
     NewCategoryNameChanged(String),
     NewCategorySubmitted,
+    NewCategoryTypeChanged(usize),
     PreviousMonth,
     NextMonth,
 }
@@ -28,6 +29,8 @@ pub struct Categories {
     form_new_category_name: String,
     view_month: u32,
     view_year: i32,
+    category_types_options: Vec<String>,
+    selected_category_type: Option<usize>,
 }
 
 impl Default for Categories {
@@ -45,6 +48,8 @@ impl Default for Categories {
             form_new_category_name: "".to_string(),
             view_month: now.month(),
             view_year: now.year(),
+            category_types_options: vec![fl!("income"), fl!("expense")],
+            selected_category_type: Some(0),
         }
     }
 }
@@ -97,6 +102,13 @@ impl Categories {
                                     ),
                             ),
                         )
+                        .push(widget::vertical_space(Length::from(10)))
+                        .push(widget::text::text(fl!("category-type")))
+                        .push(widget::dropdown(
+                            &self.category_types_options,
+                            self.selected_category_type,
+                            CategoriesMessage::NewCategoryTypeChanged,
+                        ))
                         .push(widget::vertical_space(Length::from(10)))
                         .push(
                             widget::row()
@@ -165,10 +177,51 @@ impl Categories {
 
         element = element.push(widget::vertical_space(Length::from(10)));
 
-        log::info!("categories: {:?}", self.categories);
+        element = element.push(widget::text::title4(fl!("income-categories")));
 
-        for c in &self.categories {
-            log::info!("creating: {:?}", c.name);
+        for c in &self
+            .categories
+            .clone()
+            .into_iter()
+            .filter(|c| c.is_income)
+            .collect::<Vec<Category>>()
+        {
+            element = element
+                .push(
+                    widget::container(
+                        widget::row()
+                            .push(
+                                widget::column()
+                                    .push(widget::text::title4(c.name.clone()))
+                                    .width(Length::Fill),
+                            )
+                            .push(
+                                widget::column()
+                                    .push(widget::text::text(
+                                        self.calculate_by_category_id(c.id).to_string(),
+                                    ))
+                                    .align_items(Alignment::End)
+                                    .width(Length::Fill),
+                            ),
+                    )
+                    .padding(10)
+                    .style(cosmic::theme::Container::Card),
+                )
+                .push(widget::vertical_space(Length::from(10)));
+        }
+        
+        element = element.push(widget::vertical_space(Length::from(10)));
+
+        element = element.push(widget::text::title4(fl!("expense-categories")));
+
+
+        for c in &self
+            .categories
+            .clone()
+            .into_iter()
+            .filter(|c| !c.is_income)
+            .collect::<Vec<Category>>()
+        {
             element = element
                 .push(
                     widget::container(
@@ -215,6 +268,7 @@ impl Categories {
             CategoriesMessage::NewCategorySubmitted => {
                 let new_category = NewCategory {
                     name: self.form_new_category_name.as_str(),
+                    is_income: self.selected_category_type == Some(0),
                 };
                 let mut store = STORE.lock().unwrap();
                 store.create_category(&new_category);
@@ -239,6 +293,9 @@ impl Categories {
                 } else {
                     self.view_month += 1;
                 }
+            }
+            CategoriesMessage::NewCategoryTypeChanged(value) => {
+                self.selected_category_type = Some(value);
             }
         }
         Command::batch(commands)

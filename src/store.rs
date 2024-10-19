@@ -57,8 +57,6 @@ impl Store {
             .select(Category::as_select())
             .load(&mut self.connection);
 
-        log::info!("results: {:?}", results);
-
         match results {
             Ok(results) => return Ok(results),
             Err(e) => return Err(DataStoreError::QueryError(e.to_string())),
@@ -79,6 +77,7 @@ impl Store {
             .filter(
                 transaction_date.between(start_date.and_hms(0, 0, 0), end_date.and_hms(23, 59, 59)),
             )
+            .filter(is_expense.eq(true))
             .select(sum(amount))
             .first::<Option<f32>>(&mut self.connection);
 
