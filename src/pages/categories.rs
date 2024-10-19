@@ -18,6 +18,7 @@ pub enum CategoriesMessage {
     AddCategory,
     NewCategoryNameChanged(String),
     NewCategorySubmitted,
+    NewCategoryCancel,
     NewCategoryTypeChanged(usize),
     PreviousMonth,
     NextMonth,
@@ -117,6 +118,12 @@ impl Categories {
                                         .on_press(CategoriesMessage::NewCategorySubmitted)
                                         .style(widget::button::Style::Suggested),
                                 )
+                                .push(widget::horizontal_space(Length::from(10)))
+                                .push(
+                                    widget::button::text(fl!("cancel"))
+                                        .on_press(CategoriesMessage::NewCategoryCancel)
+                                        .style(widget::button::Style::Destructive),
+                                )
                                 .width(Length::Fill)
                                 .align_items(Alignment::End),
                         )
@@ -209,11 +216,10 @@ impl Categories {
                 )
                 .push(widget::vertical_space(Length::from(10)));
         }
-        
+
         element = element.push(widget::vertical_space(Length::from(10)));
 
         element = element.push(widget::text::title4(fl!("expense-categories")));
-
 
         for c in &self
             .categories
@@ -296,6 +302,10 @@ impl Categories {
             }
             CategoriesMessage::NewCategoryTypeChanged(value) => {
                 self.selected_category_type = Some(value);
+            }
+            CategoriesMessage::NewCategoryCancel => {
+                self.add_category_view = false;
+                self.form_new_category_name = "".to_string();
             }
         }
         Command::batch(commands)
