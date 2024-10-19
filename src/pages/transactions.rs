@@ -1,9 +1,7 @@
 use chrono::{Local, NaiveDateTime, TimeZone, Utc};
 use cosmic::{
     iced::{Alignment, Length, Padding},
-    widget::{
-        self, column, horizontal_space, segmented_button::Entity, text_input, vertical_space,
-    },
+    widget::{self, column, horizontal_space, text_input, vertical_space},
     Command, Element,
 };
 

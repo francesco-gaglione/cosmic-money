@@ -13,6 +13,8 @@ page_categories = Categories
 page_transactions = Transactions
 page_stats = Statistics
 page_settings = Settings
+balance = Balance
+description = Description
 
 add-account = Add account
 new-account = New account

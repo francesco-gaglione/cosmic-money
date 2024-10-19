@@ -40,6 +40,24 @@ impl Store {
         Ok(())
     }
 
+    pub fn update_account(&mut self, update_account: &UpdateAccount) -> Result<(), DataStoreError> {
+        use schema::account::dsl::*;
+
+        let res = diesel::update(account.filter(id.eq(update_account.id)))
+            .set((
+                name.eq(&update_account.name),
+                account_description.eq(&update_account.account_description),
+                initial_balance.eq(&update_account.initial_balance),
+            ))
+            .execute(&mut self.connection);
+
+        if let Err(e) = res {
+            return Err(DataStoreError::UpdateError(e.to_string()));
+        }
+
+        Ok(())
+    }
+
     pub fn get_accounts(&mut self) -> Result<Vec<Account>, DataStoreError> {
         let results = account
             .select(Account::as_select())
