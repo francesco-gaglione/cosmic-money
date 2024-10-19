@@ -27,12 +27,13 @@ pub struct NewAccount<'a> {
     pub initial_balance: f32,
 }
 
-#[derive(Queryable, Selectable, Debug)]
+#[derive(Queryable, Selectable, Debug, Clone)]
 #[diesel(table_name = crate::schema::category)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Category {
     pub id: i32,
     pub name: String,
+    pub is_income: bool
 }
 
 impl AsRef<str> for Category {

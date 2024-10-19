@@ -26,6 +26,8 @@ add-category = Add category
 new-category = New category
 category-name = Category name
 category-type = Category type
+income-categories = Income categories
+expense-categories = Expense categories
 
 transactions = Transactions
 add-transaction = Add transaction

@@ -177,10 +177,51 @@ impl Categories {
 
         element = element.push(widget::vertical_space(Length::from(10)));
 
-        log::info!("categories: {:?}", self.categories);
+        element = element.push(widget::text::title4(fl!("income-categories")));
 
-        for c in &self.categories {
-            log::info!("creating: {:?}", c.name);
+        for c in &self
+            .categories
+            .clone()
+            .into_iter()
+            .filter(|c| c.is_income)
+            .collect::<Vec<Category>>()
+        {
+            element = element
+                .push(
+                    widget::container(
+                        widget::row()
+                            .push(
+                                widget::column()
+                                    .push(widget::text::title4(c.name.clone()))
+                                    .width(Length::Fill),
+                            )
+                            .push(
+                                widget::column()
+                                    .push(widget::text::text(
+                                        self.calculate_by_category_id(c.id).to_string(),
+                                    ))
+                                    .align_items(Alignment::End)
+                                    .width(Length::Fill),
+                            ),
+                    )
+                    .padding(10)
+                    .style(cosmic::theme::Container::Card),
+                )
+                .push(widget::vertical_space(Length::from(10)));
+        }
+        
+        element = element.push(widget::vertical_space(Length::from(10)));
+
+        element = element.push(widget::text::title4(fl!("expense-categories")));
+
+
+        for c in &self
+            .categories
+            .clone()
+            .into_iter()
+            .filter(|c| !c.is_income)
+            .collect::<Vec<Category>>()
+        {
             element = element
                 .push(
                     widget::container(
