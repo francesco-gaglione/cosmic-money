@@ -13,6 +13,7 @@ diesel::table! {
     category (id) {
         id -> Integer,
         name -> Text,
+        is_income -> Bool,
     }
 }
 
