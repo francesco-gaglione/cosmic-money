@@ -10,4 +10,7 @@ pub enum DataStoreError {
 
     #[error("Error happened on database insert: {0}")]
     InsertError(String),
+
+    #[error("Error happened on database update: {0}")]
+    UpdateError(String),
 }
