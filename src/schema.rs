@@ -14,6 +14,7 @@ diesel::table! {
     category (id) {
         id -> Integer,
         name -> Text,
+        category_description -> Text,
         is_income -> Bool,
     }
 }

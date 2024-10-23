@@ -17,6 +17,7 @@ pub enum CategoriesMessage {
     Update,
     AddCategory,
     NewCategoryNameChanged(String),
+    NewCategoryDescriptionChanged(String),
     NewCategorySubmitted,
     NewCategoryCancel,
     NewCategoryTypeChanged(usize),
@@ -26,8 +27,9 @@ pub enum CategoriesMessage {
 
 pub struct Categories {
     categories: Vec<Category>,
-    add_category_view: bool,
+    add_category_view_active: bool,
     form_new_category_name: String,
+    form_new_category_description: String,
     view_month: u32,
     view_year: i32,
     category_types_options: Vec<String>,
@@ -45,8 +47,9 @@ impl Default for Categories {
             } else {
                 vec![]
             },
-            add_category_view: false,
+            add_category_view_active: false,
             form_new_category_name: "".to_string(),
+            form_new_category_description: "".to_string(),
             view_month: now.month(),
             view_year: now.year(),
             category_types_options: vec![fl!("income"), fl!("expense")],
@@ -56,6 +59,103 @@ impl Default for Categories {
 }
 
 impl Categories {
+    pub fn add_category_view<'a>(&'a self) -> Element<'a, CategoriesMessage> {
+        let mut element = widget::column();
+        element = element.push(widget::vertical_space(Length::from(10)));
+        element = element.push(
+            widget::container(
+                widget::column()
+                    .push(widget::text::title4(fl!("new-category")))
+                    .push(widget::vertical_space(Length::from(10)))
+                    .push(
+                        widget::row().push(
+                            widget::column()
+                                .push(widget::text::text(fl!("category-name")))
+                                .push(widget::vertical_space(Length::from(3)))
+                                .push(
+                                    cosmic::widget::text_input(
+                                        fl!("new-category"),
+                                        &self.form_new_category_name,
+                                    )
+                                    .on_input(CategoriesMessage::NewCategoryNameChanged),
+                                ),
+                        ),
+                    )
+                    .push(widget::vertical_space(Length::from(10)))
+                    .push(
+                        widget::row().push(
+                            widget::column()
+                                .push(widget::text::text(fl!("category-description")))
+                                .push(widget::vertical_space(Length::from(3)))
+                                .push(
+                                    cosmic::widget::text_input(
+                                        fl!("category-description"),
+                                        &self.form_new_category_description,
+                                    )
+                                    .on_input(CategoriesMessage::NewCategoryDescriptionChanged),
+                                ),
+                        ),
+                    )
+                    .push(widget::vertical_space(Length::from(10)))
+                    .push(widget::text::text(fl!("category-type")))
+                    .push(widget::dropdown(
+                        &self.category_types_options,
+                        self.selected_category_type,
+                        CategoriesMessage::NewCategoryTypeChanged,
+                    ))
+                    .push(widget::vertical_space(Length::from(10)))
+                    .push(
+                        widget::row()
+                            .push(
+                                widget::button::text(fl!("add-category"))
+                                    .on_press(CategoriesMessage::NewCategorySubmitted)
+                                    .style(widget::button::Style::Suggested),
+                            )
+                            .push(widget::horizontal_space(Length::from(10)))
+                            .push(
+                                widget::button::text(fl!("cancel"))
+                                    .on_press(CategoriesMessage::NewCategoryCancel)
+                                    .style(widget::button::Style::Destructive),
+                            )
+                            .width(Length::Fill)
+                            .align_items(Alignment::End),
+                    )
+                    .width(Length::Fill),
+            )
+            .padding(10)
+            .width(Length::Fill)
+            .style(cosmic::theme::Container::Card),
+        );
+
+        element = element.push(widget::vertical_space(Length::from(10)));
+
+        element.into()
+    }
+
+    pub fn category_card<'a>(&'a self, c: &Category) -> Element<'a, CategoriesMessage> {
+        let element = widget::container(
+            widget::row()
+                .push(
+                    widget::column()
+                        .push(widget::text::title4(c.name.clone()))
+                        .push(widget::text::text(c.category_description.clone()))
+                        .width(Length::Fill),
+                )
+                .push(
+                    widget::column()
+                        .push(widget::text::text(
+                            self.calculate_by_category_id(c.id).to_string(),
+                        ))
+                        .align_items(Alignment::End)
+                        .width(Length::Fill),
+                ),
+        )
+        .padding(10)
+        .style(cosmic::theme::Container::Card);
+
+        element.into()
+    }
+
     pub fn view<'a>(&'a self) -> Element<'a, CategoriesMessage> {
         let mut element = widget::column()
             .width(Length::Fill)
@@ -82,59 +182,8 @@ impl Categories {
                 ),
         );
 
-        if self.add_category_view {
-            element = element.push(widget::vertical_space(Length::from(10)));
-            element = element.push(
-                widget::container(
-                    widget::column()
-                        .push(widget::text::title4(fl!("new-category")))
-                        .push(widget::vertical_space(Length::from(10)))
-                        .push(
-                            widget::row().push(
-                                widget::column()
-                                    .push(widget::text::text(fl!("category-name")))
-                                    .push(widget::vertical_space(Length::from(3)))
-                                    .push(
-                                        cosmic::widget::text_input(
-                                            fl!("new-category"),
-                                            &self.form_new_category_name,
-                                        )
-                                        .on_input(CategoriesMessage::NewCategoryNameChanged),
-                                    ),
-                            ),
-                        )
-                        .push(widget::vertical_space(Length::from(10)))
-                        .push(widget::text::text(fl!("category-type")))
-                        .push(widget::dropdown(
-                            &self.category_types_options,
-                            self.selected_category_type,
-                            CategoriesMessage::NewCategoryTypeChanged,
-                        ))
-                        .push(widget::vertical_space(Length::from(10)))
-                        .push(
-                            widget::row()
-                                .push(
-                                    widget::button::text(fl!("add-category"))
-                                        .on_press(CategoriesMessage::NewCategorySubmitted)
-                                        .style(widget::button::Style::Suggested),
-                                )
-                                .push(widget::horizontal_space(Length::from(10)))
-                                .push(
-                                    widget::button::text(fl!("cancel"))
-                                        .on_press(CategoriesMessage::NewCategoryCancel)
-                                        .style(widget::button::Style::Destructive),
-                                )
-                                .width(Length::Fill)
-                                .align_items(Alignment::End),
-                        )
-                        .width(Length::Fill),
-                )
-                .padding(10)
-                .width(Length::Fill)
-                .style(cosmic::theme::Container::Card),
-            );
-
-            element = element.push(widget::vertical_space(Length::from(10)));
+        if self.add_category_view_active {
+            element = element.push(self.add_category_view());
         }
 
         let month_names = vec![
@@ -194,26 +243,7 @@ impl Categories {
             .collect::<Vec<Category>>()
         {
             element = element
-                .push(
-                    widget::container(
-                        widget::row()
-                            .push(
-                                widget::column()
-                                    .push(widget::text::title4(c.name.clone()))
-                                    .width(Length::Fill),
-                            )
-                            .push(
-                                widget::column()
-                                    .push(widget::text::text(
-                                        self.calculate_by_category_id(c.id).to_string(),
-                                    ))
-                                    .align_items(Alignment::End)
-                                    .width(Length::Fill),
-                            ),
-                    )
-                    .padding(10)
-                    .style(cosmic::theme::Container::Card),
-                )
+                .push(self.category_card(c))
                 .push(widget::vertical_space(Length::from(10)));
         }
 
@@ -229,26 +259,7 @@ impl Categories {
             .collect::<Vec<Category>>()
         {
             element = element
-                .push(
-                    widget::container(
-                        widget::row()
-                            .push(
-                                widget::column()
-                                    .push(widget::text::title4(c.name.clone()))
-                                    .width(Length::Fill),
-                            )
-                            .push(
-                                widget::column()
-                                    .push(widget::text::text(
-                                        self.calculate_by_category_id(c.id).to_string(),
-                                    ))
-                                    .align_items(Alignment::End)
-                                    .width(Length::Fill),
-                            ),
-                    )
-                    .padding(10)
-                    .style(cosmic::theme::Container::Card),
-                )
+                .push(self.category_card(c))
                 .push(widget::vertical_space(Length::from(10)));
         }
 
@@ -266,19 +277,23 @@ impl Categories {
                 }
             }
             CategoriesMessage::AddCategory => {
-                self.add_category_view = true;
+                self.add_category_view_active = true;
             }
             CategoriesMessage::NewCategoryNameChanged(value) => {
                 self.form_new_category_name = value;
+            }
+            CategoriesMessage::NewCategoryDescriptionChanged(value) => {
+                self.form_new_category_description = value;
             }
             CategoriesMessage::NewCategorySubmitted => {
                 let new_category = NewCategory {
                     name: self.form_new_category_name.as_str(),
                     is_income: self.selected_category_type == Some(0),
+                    category_description: self.form_new_category_description.clone(),
                 };
                 let mut store = STORE.lock().unwrap();
                 store.create_category(&new_category);
-                self.add_category_view = false;
+                self.add_category_view_active = false;
                 self.form_new_category_name = "".to_string();
                 commands.push(Command::perform(async {}, |_| {
                     Message::Categories(super::categories::CategoriesMessage::Update)
@@ -304,7 +319,7 @@ impl Categories {
                 self.selected_category_type = Some(value);
             }
             CategoriesMessage::NewCategoryCancel => {
-                self.add_category_view = false;
+                self.add_category_view_active = false;
                 self.form_new_category_name = "".to_string();
             }
         }
