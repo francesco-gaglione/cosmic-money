@@ -44,6 +44,7 @@ pub struct UpdateAccount<'a> {
 pub struct Category {
     pub id: i32,
     pub name: String,
+    pub category_description: String,
     pub is_income: bool,
 }
 
@@ -58,6 +59,7 @@ impl AsRef<str> for Category {
 pub struct NewCategory<'a> {
     pub name: &'a str,
     pub is_income: bool,
+    pub category_description: String,
 }
 
 #[derive(Queryable, Selectable, Debug)]

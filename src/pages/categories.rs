@@ -17,6 +17,7 @@ pub enum CategoriesMessage {
     Update,
     AddCategory,
     NewCategoryNameChanged(String),
+    NewCategoryDescriptionChanged(String),
     NewCategorySubmitted,
     NewCategoryCancel,
     NewCategoryTypeChanged(usize),
@@ -28,6 +29,7 @@ pub struct Categories {
     categories: Vec<Category>,
     add_category_view: bool,
     form_new_category_name: String,
+    form_new_category_description: String,
     view_month: u32,
     view_year: i32,
     category_types_options: Vec<String>,
@@ -47,6 +49,7 @@ impl Default for Categories {
             },
             add_category_view: false,
             form_new_category_name: "".to_string(),
+            form_new_category_description: "".to_string(),
             view_month: now.month(),
             view_year: now.year(),
             category_types_options: vec![fl!("income"), fl!("expense")],
@@ -100,6 +103,21 @@ impl Categories {
                                             &self.form_new_category_name,
                                         )
                                         .on_input(CategoriesMessage::NewCategoryNameChanged),
+                                    ),
+                            ),
+                        )
+                        .push(widget::vertical_space(Length::from(10)))
+                        .push(
+                            widget::row().push(
+                                widget::column()
+                                    .push(widget::text::text(fl!("category-description")))
+                                    .push(widget::vertical_space(Length::from(3)))
+                                    .push(
+                                        cosmic::widget::text_input(
+                                            fl!("category-description"),
+                                            &self.form_new_category_description,
+                                        )
+                                        .on_input(CategoriesMessage::NewCategoryDescriptionChanged),
                                     ),
                             ),
                         )
@@ -200,6 +218,7 @@ impl Categories {
                             .push(
                                 widget::column()
                                     .push(widget::text::title4(c.name.clone()))
+                                    .push(widget::text::text(c.category_description.clone()))
                                     .width(Length::Fill),
                             )
                             .push(
@@ -235,6 +254,7 @@ impl Categories {
                             .push(
                                 widget::column()
                                     .push(widget::text::title4(c.name.clone()))
+                                    .push(widget::text::text(c.category_description.clone()))
                                     .width(Length::Fill),
                             )
                             .push(
@@ -271,10 +291,14 @@ impl Categories {
             CategoriesMessage::NewCategoryNameChanged(value) => {
                 self.form_new_category_name = value;
             }
+            CategoriesMessage::NewCategoryDescriptionChanged(value) => {
+                self.form_new_category_description = value;
+            }
             CategoriesMessage::NewCategorySubmitted => {
                 let new_category = NewCategory {
                     name: self.form_new_category_name.as_str(),
                     is_income: self.selected_category_type == Some(0),
+                    category_description: self.form_new_category_description.clone(),
                 };
                 let mut store = STORE.lock().unwrap();
                 store.create_category(&new_category);

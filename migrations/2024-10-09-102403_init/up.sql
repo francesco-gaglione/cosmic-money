@@ -9,6 +9,7 @@ CREATE TABLE account (
 CREATE TABLE category (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   name VARCHAR NOT NULL,
+  category_description VARCHAR NOT NULL,
   is_income BOOLEAN DEFAULT FALSE NOT NULL
 );
 
@@ -27,7 +28,15 @@ CREATE TABLE money_transaction (
 INSERT INTO account (name, account_type, initial_balance, account_description)
 VALUES ('Checking Account', 'Bank', 1000.00, "account description");
 
-INSERT INTO category (name) VALUES ('Groceries');
-INSERT INTO category (name) VALUES ('Salary');
-INSERT INTO category (name) VALUES ('Investments');
-INSERT INTO category (name) VALUES ('Entertainment');
+
+INSERT INTO category (name, category_description, is_income)
+VALUES ('Groceries', 'Expenses for food and household supplies', FALSE);
+
+INSERT INTO category (name, category_description, is_income)
+VALUES ('Salary', 'Income from employment', TRUE);
+
+INSERT INTO category (name, category_description, is_income)
+VALUES ('Investments', 'Income or expenses related to investments', FALSE);
+
+INSERT INTO category (name, category_description, is_income)
+VALUES ('Entertainment', 'Expenses for leisure activities', FALSE);
