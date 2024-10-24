@@ -170,6 +170,7 @@ impl Store {
     pub fn get_money_transactions(&mut self) -> Result<Vec<MoneyTransaction>, DataStoreError> {
         let results = money_transaction
             .select(MoneyTransaction::as_select())
+            .order(transaction_date.desc())
             .load(&mut self.connection);
 
         match results {
