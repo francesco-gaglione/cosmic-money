@@ -103,8 +103,13 @@ impl Transactions {
                         .push(
                             widget::row()
                                 .push(
-                                    widget::text::text(format!("{}: {}", fl!("amount"), t.amount))
-                                        .width(Length::Fill),
+                                    widget::text::text(format!(
+                                        "{}: {}{}",
+                                        fl!("amount"),
+                                        if t.is_expense { "-" } else { "+" },
+                                        t.amount
+                                    ))
+                                    .width(Length::Fill),
                                 )
                                 .push(
                                     widget::text::text(format!(
