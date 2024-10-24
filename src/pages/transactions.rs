@@ -1,4 +1,4 @@
-use chrono::{Local, NaiveDateTime, TimeZone, Utc};
+use chrono::{Datelike, Local, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use cosmic::{
     iced::{Alignment, Length, Padding},
     prelude::CollectionWidget,
@@ -44,7 +44,7 @@ pub struct Transactions {
 impl Default for Transactions {
     fn default() -> Self {
         let mut store = STORE.lock().unwrap();
-        let transactions = store.get_money_transactions();
+        let transactions = store.get_money_transactions().unwrap_or_else(|_| vec![]);
         Self {
             add_transaction_view: false,
             categories: store.get_categories().unwrap_or_else(|_| vec![]),
@@ -56,7 +56,7 @@ impl Default for Transactions {
             form_note: "".to_string(),
             form_selectected_category: Some(0),
             form_selected_bank_account: Some(0),
-            transactions: transactions.unwrap_or_else(|_| vec![]),
+            transactions,
             form_amount: "".to_string(),
             form_date: Utc::now().timestamp(),
             new_transaction_amount: 0.,
@@ -66,11 +66,13 @@ impl Default for Transactions {
 
 impl Transactions {
     pub fn view<'a>(&'a self) -> Element<'a, TransactionMessage> {
-        if self.add_transaction_view {
+        let container = widget::container(if self.add_transaction_view {
             self.new_transaction_view()
         } else {
             self.transactions_view()
-        }
+        })
+        .padding(Padding::new(15.));
+        widget::scrollable(container).into()
     }
 
     pub fn transactions_view<'a>(&self) -> Element<'a, TransactionMessage> {
@@ -96,8 +98,41 @@ impl Transactions {
             .width(Length::Fill)
             .align_items(Alignment::Start);
 
-        if self.transactions.len() > 0 {
+        let month_names = vec![
+            fl!("month-1"),  // January
+            fl!("month-2"),  // February
+            fl!("month-3"),  // March
+            fl!("month-4"),  // April
+            fl!("month-5"),  // May
+            fl!("month-6"),  // June
+            fl!("month-7"),  // July
+            fl!("month-8"),  // August
+            fl!("month-9"),  // September
+            fl!("month-10"), // October
+            fl!("month-11"), // November
+            fl!("month-12"), // December
+        ];
+
+        if !self.transactions.is_empty() {
+            let mut last_date: NaiveDateTime = NaiveDate::from_ymd(1970, 1, 1).and_hms(0, 0, 0);
+
             for t in &self.transactions {
+                let mut date_row: Option<Element<'a, TransactionMessage>> = None;
+                if t.transaction_date.date().ne(&last_date.date()) {
+                    let month = t.transaction_date.month();
+
+                    date_row = Some(
+                        widget::row()
+                            .push(widget::text::title4(format!(
+                                "{} {}",
+                                t.transaction_date.day().to_string(),
+                                month_names[month as usize - 1]
+                            )))
+                            .into(),
+                    );
+                    last_date = t.transaction_date.clone();
+                }
+                element = element.push_maybe(date_row);
                 let container = widget::container(
                     widget::column()
                         .push(
