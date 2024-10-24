@@ -1,6 +1,7 @@
 use chrono::{Local, NaiveDateTime, TimeZone, Utc};
 use cosmic::{
     iced::{Alignment, Length, Padding},
+    prelude::CollectionWidget,
     widget::{self, column, horizontal_space, text_input, vertical_space},
     Command, Element,
 };
@@ -97,57 +98,57 @@ impl Transactions {
 
         if self.transactions.len() > 0 {
             for t in &self.transactions {
-                element = element
-                    .push(
-                        widget::container(
-                            widget::column()
+                let container = widget::container(
+                    widget::column()
+                        .push(
+                            widget::row()
                                 .push(
-                                    widget::row()
-                                        .push(
-                                            widget::text::text(format!(
-                                                "{}: {}",
-                                                fl!("amount"),
-                                                t.amount
-                                            ))
-                                            .width(Length::Fill),
-                                        )
-                                        .push(
-                                            widget::text::text(format!(
-                                                "{}: {}",
-                                                fl!("category"),
-                                                self.categories
-                                                    .iter()
-                                                    .find(|c| c.id == t.transaction_category)
-                                                    .map(|c| c.name.clone())
-                                                    .unwrap_or_else(|| fl!("not-found"))
-                                            ))
-                                            .width(Length::Fill),
-                                        )
-                                        .push(
-                                            widget::text::text(format!(
-                                                "{}: {}",
-                                                fl!("date"),
-                                                Local
-                                                    .from_utc_datetime(&t.transaction_date)
-                                                    .format("%d-%m-%Y %H:%M")
-                                                    .to_string()
-                                            ))
-                                            .width(Length::Fill),
-                                        )
+                                    widget::text::text(format!("{}: {}", fl!("amount"), t.amount))
                                         .width(Length::Fill),
                                 )
-                                .push(vertical_space(Length::from(5)))
-                                .push(widget::row().push(widget::text::text(format!(
-                                    "{}: {}",
-                                    fl!("note"),
-                                    t.description
-                                ))))
+                                .push(
+                                    widget::text::text(format!(
+                                        "{}: {}",
+                                        fl!("category"),
+                                        self.categories
+                                            .iter()
+                                            .find(|c| c.id == t.transaction_category)
+                                            .map(|c| c.name.clone())
+                                            .unwrap_or_else(|| fl!("not-found"))
+                                    ))
+                                    .width(Length::Fill),
+                                )
+                                .push(
+                                    widget::text::text(format!(
+                                        "{}: {}",
+                                        fl!("date"),
+                                        Local
+                                            .from_utc_datetime(&t.transaction_date)
+                                            .format("%d-%m-%Y %H:%M")
+                                            .to_string()
+                                    ))
+                                    .width(Length::Fill),
+                                )
                                 .width(Length::Fill),
                         )
-                        .width(Length::Fill)
-                        .padding(Padding::new(10.))
-                        .style(cosmic::theme::Container::Card),
-                    )
+                        .push(vertical_space(Length::from(5)))
+                        .push_maybe(if !t.description.is_empty() {
+                            Some(widget::row().push(widget::text::text(format!(
+                                "{}: {}",
+                                fl!("note"),
+                                t.description
+                            ))))
+                        } else {
+                            None
+                        })
+                        .width(Length::Fill),
+                )
+                .width(Length::Fill)
+                .padding(Padding::new(10.))
+                .style(cosmic::theme::Container::Card);
+
+                element = element
+                    .push(container)
                     .push(vertical_space(Length::from(10)))
             }
         } else {
