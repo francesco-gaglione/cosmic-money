@@ -8,7 +8,7 @@ use cosmic::{
 use crate::{
     app::Message,
     fl,
-    models::{Category, NewCategory},
+    models::{Category, NewCategory, UpdateCategory},
     STORE,
 };
 
@@ -20,9 +20,15 @@ pub enum CategoriesMessage {
     NewCategoryDescriptionChanged(String),
     NewCategorySubmitted,
     NewCategoryCancel,
+    EditCategoryName(String),
+    EditCategoryDescription(String),
+    EditCategoryCancel,
+    EditCategorySubmitted,
+    EditCategoryTypeChanged(usize),
     NewCategoryTypeChanged(usize),
     PreviousMonth,
     NextMonth,
+    EditCategory(i32),
 }
 
 pub struct Categories {
@@ -30,10 +36,14 @@ pub struct Categories {
     add_category_view_active: bool,
     form_new_category_name: String,
     form_new_category_description: String,
+    edit_category_form_name: String,
+    edit_category_form_description: String,
     view_month: u32,
     view_year: i32,
     category_types_options: Vec<String>,
     selected_category_type: Option<usize>,
+    edit_category_type: Option<usize>,
+    edit_category_id: Option<i32>,
 }
 
 impl Default for Categories {
@@ -54,6 +64,10 @@ impl Default for Categories {
             view_year: now.year(),
             category_types_options: vec![fl!("income"), fl!("expense")],
             selected_category_type: Some(0),
+            edit_category_id: None,
+            edit_category_form_name: "".to_string(),
+            edit_category_form_description: "".to_string(),
+            edit_category_type: Some(0),
         }
     }
 }
@@ -133,31 +147,85 @@ impl Categories {
     }
 
     pub fn category_card<'a>(&'a self, c: &Category) -> Element<'a, CategoriesMessage> {
-        let element = widget::container(
-            widget::row()
+        let mut main_col = widget::column();
+        let mut info_col = widget::column()
+            .push(widget::text::title4(c.name.clone()))
+            .push(widget::text::text(c.category_description.clone()))
+            .push(widget::text::text(format!(
+                "{}: {}",
+                fl!("balance"),
+                self.calculate_by_category_id(c.id).to_string(),
+            )))
+            .width(Length::Fill);
+
+        let mut row = widget::row().push(info_col).push(
+            widget::column()
                 .push(
-                    widget::column()
-                        .push(widget::text::title4(c.name.clone()))
-                        .push(widget::text::text(c.category_description.clone()))
-                        .width(Length::Fill),
+                    widget::button::icon(widget::icon::from_name("edit-symbolic"))
+                        .on_press(CategoriesMessage::EditCategory(c.id)),
                 )
-                .push(
+                .align_items(Alignment::End)
+                .width(Length::Fill),
+        );
+
+        main_col = main_col.push(row);
+
+        if self.edit_category_id == Some(c.id) {
+            main_col = main_col.push(widget::vertical_space(Length::from(10)));
+            main_col = main_col.push(widget::divider::horizontal::default());
+            main_col = main_col.push(widget::vertical_space(Length::from(10)));
+            main_col = main_col.push(
+                widget::row().push(
                     widget::column()
-                        .push(widget::text::text(
-                            self.calculate_by_category_id(c.id).to_string(),
+                        .push(widget::text::text(fl!("category-name")))
+                        .push(
+                            widget::text_input(fl!("category-name"), &self.edit_category_form_name)
+                                .on_input(CategoriesMessage::EditCategoryName),
+                        )
+                        .push(widget::vertical_space(Length::from(10)))
+                        .push(widget::text::text(fl!("category-description")))
+                        .push(
+                            widget::text_input(
+                                fl!("category-description"),
+                                &self.edit_category_form_description,
+                            )
+                            .on_input(CategoriesMessage::EditCategoryDescription),
+                        )
+                        .push(widget::vertical_space(Length::from(10)))
+                        .push(widget::dropdown(
+                            &self.category_types_options,
+                            self.edit_category_type,
+                            CategoriesMessage::EditCategoryTypeChanged,
                         ))
-                        .align_items(Alignment::End)
-                        .width(Length::Fill),
+                        .push(widget::vertical_space(Length::from(10)))
+                        .push(
+                            widget::row()
+                                .push(
+                                    widget::button::text(fl!("save"))
+                                        .on_press(CategoriesMessage::EditCategorySubmitted)
+                                        .style(widget::button::Style::Suggested),
+                                )
+                                .push(widget::horizontal_space(Length::from(10)))
+                                .push(
+                                    widget::button::text(fl!("cancel"))
+                                        .on_press(CategoriesMessage::EditCategoryCancel)
+                                        .style(widget::button::Style::Destructive),
+                                ),
+                        ),
                 ),
-        )
-        .padding(10)
-        .style(cosmic::theme::Container::Card);
+            );
+        }
+
+        let element = widget::container(main_col)
+            .padding(10)
+            .style(cosmic::theme::Container::Card);
 
         element.into()
     }
 
     pub fn view<'a>(&'a self) -> Element<'a, CategoriesMessage> {
         let mut element = widget::column()
+            .padding(Padding::new(10.))
             .width(Length::Fill)
             .align_items(Alignment::Start);
 
@@ -263,13 +331,14 @@ impl Categories {
                 .push(widget::vertical_space(Length::from(10)));
         }
 
-        element.into()
+        widget::scrollable(element).into()
     }
 
     pub fn update(&mut self, message: CategoriesMessage) -> Command<crate::app::Message> {
         let mut commands = vec![];
         match message {
             CategoriesMessage::Update => {
+                log::info!("updating category page");
                 let mut store = STORE.lock().unwrap();
                 let categories = store.get_categories();
                 if let Ok(categories) = categories {
@@ -292,12 +361,21 @@ impl Categories {
                     category_description: self.form_new_category_description.clone(),
                 };
                 let mut store = STORE.lock().unwrap();
-                store.create_category(&new_category);
+                let _ = store.create_category(&new_category);
                 self.add_category_view_active = false;
                 self.form_new_category_name = "".to_string();
                 commands.push(Command::perform(async {}, |_| {
                     Message::Categories(super::categories::CategoriesMessage::Update)
                 }));
+            }
+            CategoriesMessage::EditCategoryName(value) => {
+                self.edit_category_form_name = value;
+            }
+            CategoriesMessage::EditCategoryDescription(value) => {
+                self.edit_category_form_description = value;
+            }
+            CategoriesMessage::EditCategoryTypeChanged(value) => {
+                self.edit_category_type = Some(value)
             }
             CategoriesMessage::PreviousMonth => {
                 if self.view_month == 1 {
@@ -321,6 +399,38 @@ impl Categories {
             CategoriesMessage::NewCategoryCancel => {
                 self.add_category_view_active = false;
                 self.form_new_category_name = "".to_string();
+            }
+            CategoriesMessage::EditCategory(category_id) => {
+                let category: Option<Category> = self
+                    .categories
+                    .clone()
+                    .into_iter()
+                    .find(|c| c.id == category_id);
+                self.edit_category_id = Some(category_id);
+                if let Some(category) = category {
+                    self.edit_category_form_name = category.name;
+                    self.edit_category_form_description = category.category_description;
+                }
+            }
+            CategoriesMessage::EditCategoryCancel => {
+                self.edit_category_id = None;
+            }
+            CategoriesMessage::EditCategorySubmitted => {
+                log::info!("update category submitted");
+                if let Some(id) = self.edit_category_id {
+                    let update_category = UpdateCategory {
+                        id,
+                        name: &self.edit_category_form_name,
+                        is_income: self.edit_category_type == Some(0),
+                        category_description: self.edit_category_form_description.clone(),
+                    };
+                    let mut store = STORE.lock().unwrap();
+                    let _ = store.update_category(&update_category);
+                    self.edit_category_id = None;
+                    commands.push(Command::perform(async {}, |_| {
+                        Message::Categories(super::categories::CategoriesMessage::Update)
+                    }));
+                }
             }
         }
         Command::batch(commands)

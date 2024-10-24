@@ -146,6 +146,27 @@ impl Store {
         Ok(())
     }
 
+    pub fn update_category(
+        &mut self,
+        update_category: &UpdateCategory,
+    ) -> Result<(), DataStoreError> {
+        use schema::category::dsl::*;
+
+        let res = diesel::update(category.filter(id.eq(update_category.id)))
+            .set((
+                name.eq(&update_category.name),
+                category_description.eq(&update_category.category_description),
+                is_income.eq(&update_category.is_income),
+            ))
+            .execute(&mut self.connection);
+
+        if let Err(e) = res {
+            return Err(DataStoreError::UpdateError(e.to_string()));
+        }
+
+        Ok(())
+    }
+
     pub fn get_money_transactions(&mut self) -> Result<Vec<MoneyTransaction>, DataStoreError> {
         let results = money_transaction
             .select(MoneyTransaction::as_select())
