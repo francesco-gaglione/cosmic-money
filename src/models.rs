@@ -62,6 +62,15 @@ pub struct NewCategory<'a> {
     pub category_description: String,
 }
 
+#[derive(Insertable)]
+#[diesel(table_name = category)]
+pub struct UpdateCategory<'a> {
+    pub id: i32,
+    pub name: &'a str,
+    pub is_income: bool,
+    pub category_description: String,
+}
+
 #[derive(Queryable, Selectable, Debug)]
 #[diesel(table_name = crate::schema::money_transaction)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]

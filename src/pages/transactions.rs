@@ -300,7 +300,7 @@ impl Transactions {
                     transaction_date: NaiveDateTime::from_timestamp(self.form_date, 0),
                     is_expense,
                 };
-                store.create_money_transaction(&new_transaction);
+                let _ = store.create_money_transaction(&new_transaction);
                 commands.push(Command::perform(async {}, |_| {
                     app::Message::Transactions(TransactionMessage::UpdatePage)
                 }));
