@@ -1,5 +1,5 @@
-name := 'cosmic-app-template'
-export APPID := 'com.example.CosmicAppTemplate'
+name := 'cosmic_money'
+export APPID := 'com.francescogaglione.cosmicmoney'
 
 rootdir := ''
 prefix := '/usr'
@@ -70,18 +70,13 @@ install:
     install -Dm0644 {{desktop-src}} {{desktop-dst}}
     install -Dm0644 {{metainfo-src}} {{metainfo-dst}}
     for size in `ls {{icons-src}}`; do \
-        install -Dm0644 "{{icons-src}}/$size/apps/{{APPID}}.svg" "{{icons-dst}}/$size/apps/{{APPID}}.svg"; \
+        install -Dm0644 "{{icons-src}}/$size/apps/{{APPID}}.png" "{{icons-dst}}/$size/apps/{{APPID}}.png"; \
     done
 
-# Installs files
-flatpak:
-    install -Dm0755 {{bin-src}} {{flatpak-bin-dst}}
-    install -Dm0644 {{desktop-src}} {{desktop-dst}}
-    install -Dm0644 {{metainfo-src}} {{metainfo-dst}}
-    for size in `ls {{icons-src}}`; do \
-        install -Dm0644 "{{icons-src}}/$size/apps/{{APPID}}.svg" "{{icons-dst}}/$size/apps/{{APPID}}.svg"; \
-    done
-    
+package-flatpak:
+    flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --install builddir com.francescogaglione.cosmicmoney.json
+    flatpak build-bundle repo com.francescogaglione.cosmicmoney.flatpak com.francescogaglione.cosmicmoney --runtime-repo=https://github.com/francescogaglione/cosmicmoney
+
 debpkg: build-release
     cargo deb --no-build
 
@@ -91,7 +86,7 @@ uninstall:
     rm {{desktop-dst}}
     rm {{metainfo-dst}}
     for size in `ls {{icons-src}}`; do \
-        rm "{{icons-dst}}/$size/apps/{{APPID}}.svg"; \
+        rm "{{icons-dst}}/$size/apps/{{APPID}}.png"; \
     done
 
 # Vendor dependencies locally

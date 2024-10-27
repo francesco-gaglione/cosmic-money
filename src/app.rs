@@ -9,6 +9,11 @@ use cosmic::iced::{Alignment, Length};
 use cosmic::widget::{self, menu, nav_bar};
 use cosmic::{cosmic_theme, theme, Application, ApplicationExt, Element};
 
+pub const QUALIFIER: &str = "com";
+pub const ORG: &str = "francescogaglione";
+pub const APP: &str = "cosmicmoney";
+pub const APPID: &str = constcat::concat!(QUALIFIER, ".", ORG, ".", APP);
+
 /// This is the struct that represents your application.
 /// It is used to define the data that will be used by your application.
 pub struct MoneyManager {
@@ -83,7 +88,7 @@ impl Application for MoneyManager {
     type Executor = cosmic::executor::Default;
     type Flags = ();
     type Message = Message;
-    const APP_ID: &'static str = "com.demo.CosmicMoney";
+    const APP_ID: &'static str = "com.francescogaglione.cosmicmoney";
 
     fn core(&self) -> &Core {
         &self.core
@@ -240,7 +245,7 @@ impl MoneyManager {
         let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
 
         let icon = widget::svg(widget::svg::Handle::from_memory(
-            &include_bytes!("../res/icons/hicolor/128x128/apps/com.example.CosmicAppTemplate.svg")
+            &include_bytes!("../res/icons/hicolor/128x128/apps/com.francescogaglione.cosmicmoney.png")
                 [..],
         ));
 

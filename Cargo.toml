@@ -24,6 +24,9 @@ chrono = "0.4.38"
 dotenvy = "0.15"
 thiserror = "1.0.64"
 serde = { version = "1", features = ["serde_derive"] }
+diesel_migrations = "2.2.0"
+directories = "5.0.1"
+constcat = "0.5"
 
 [dependencies.libcosmic]
 git = "https://github.com/pop-os/libcosmic.git"
