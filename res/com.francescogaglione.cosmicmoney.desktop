@@ -1,10 +1,10 @@
 [Desktop Entry]
-Name=COSMIC App Template
-Exec=cosmic-app-template %F
+Name=Cosmic money
+Exec=cosmic_money %F
 Terminal=false
 Type=Application
 StartupNotify=true
-Icon=com.example.CosmicAppTemplate
+Icon=com.francescogaglione.cosmicmoney
 Categories=COSMIC;Utility;
 Keywords=Folder;Manager;
 MimeType=inode/directory;

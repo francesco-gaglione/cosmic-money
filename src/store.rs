@@ -2,6 +2,7 @@ use crate::{
     errors::DataStoreError,
     models::{self, Account, NewAccount},
     schema::{self, account, category, money_transaction},
+    DATABASE_URL,
 };
 use chrono::NaiveDate;
 use diesel::prelude::*;
@@ -11,7 +12,6 @@ use schema::account::dsl::*;
 use schema::category::dsl::*;
 use schema::currency::dsl::*;
 use schema::money_transaction::dsl::*;
-use std::env;
 
 pub struct Store {
     connection: SqliteConnection,
@@ -19,10 +19,9 @@ pub struct Store {
 
 impl Default for Store {
     fn default() -> Self {
-        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
         Self {
-            connection: SqliteConnection::establish(&database_url)
-                .unwrap_or_else(|_| panic!("Error connecting to {}", database_url)),
+            connection: SqliteConnection::establish(DATABASE_URL)
+                .unwrap_or_else(|_| panic!("Error connecting to {}", DATABASE_URL)),
         }
     }
 }
