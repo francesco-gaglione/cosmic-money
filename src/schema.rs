@@ -20,6 +20,14 @@ diesel::table! {
 }
 
 diesel::table! {
+    currency (id) {
+        id -> Integer,
+        label -> Text,
+        symbol -> Text,
+    }
+}
+
+diesel::table! {
     money_transaction (id) {
         id -> Integer,
         bank_account -> Integer,
@@ -37,5 +45,6 @@ diesel::joinable!(money_transaction -> category (transaction_category));
 diesel::allow_tables_to_appear_in_same_query!(
     account,
     category,
+    currency,
     money_transaction,
 );

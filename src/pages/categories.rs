@@ -7,6 +7,7 @@ use cosmic::{
 
 use crate::{
     app::Message,
+    config::Config,
     fl,
     models::{Category, NewCategory, UpdateCategory},
     STORE,
@@ -32,6 +33,7 @@ pub enum CategoriesMessage {
 }
 
 pub struct Categories {
+    currency_symbol: String,
     categories: Vec<Category>,
     add_category_view_active: bool,
     form_new_category_name: String,
@@ -49,9 +51,12 @@ pub struct Categories {
 impl Default for Categories {
     fn default() -> Self {
         let mut store = STORE.lock().unwrap();
+        let config = Config::load();
         let categories = store.get_categories();
         let now = Local::now();
+        let currency_symbol = store.get_currency_symbol_by_id(config.1.currency_id);
         Self {
+            currency_symbol: currency_symbol.unwrap_or_else(|_| "USD".to_string()),
             categories: if let Ok(cat) = categories {
                 cat
             } else {
@@ -148,17 +153,18 @@ impl Categories {
 
     pub fn category_card<'a>(&'a self, c: &Category) -> Element<'a, CategoriesMessage> {
         let mut main_col = widget::column();
-        let mut info_col = widget::column()
+        let info_col = widget::column()
             .push(widget::text::title4(c.name.clone()))
             .push(widget::text::text(c.category_description.clone()))
             .push(widget::text::text(format!(
-                "{}: {}",
+                "{}: {} {}",
                 fl!("balance"),
                 self.calculate_by_category_id(c.id).to_string(),
+                self.currency_symbol
             )))
             .width(Length::Fill);
 
-        let mut row = widget::row().push(info_col).push(
+        let row = widget::row().push(info_col).push(
             widget::column()
                 .push(
                     widget::button::icon(widget::icon::from_name("edit-symbolic"))

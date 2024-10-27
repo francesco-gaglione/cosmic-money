@@ -9,6 +9,7 @@ use diesel::{Connection, RunQueryDsl, SelectableHelper, SqliteConnection};
 use models::*;
 use schema::account::dsl::*;
 use schema::category::dsl::*;
+use schema::currency::dsl::*;
 use schema::money_transaction::dsl::*;
 use std::env;
 
@@ -193,5 +194,33 @@ impl Store {
         }
 
         Ok(())
+    }
+
+    pub fn get_currencies(&mut self) -> Result<Vec<Currency>, DataStoreError> {
+        let results = currency
+            .select(Currency::as_select())
+            .load(&mut self.connection);
+
+        match results {
+            Ok(results) => return Ok(results),
+            Err(e) => return Err(DataStoreError::QueryError(e.to_string())),
+        }
+    }
+
+    pub fn get_currency_symbol_by_id(
+        &mut self,
+        currency_id: i32,
+    ) -> Result<String, DataStoreError> {
+        use crate::schema::currency::dsl::{currency, id, symbol};
+
+        let result = currency
+            .filter(id.eq(currency_id))
+            .select(symbol)
+            .first::<String>(&mut self.connection);
+
+        match result {
+            Ok(currency_symbol) => Ok(currency_symbol),
+            Err(e) => Err(DataStoreError::QueryError(e.to_string())),
+        }
     }
 }

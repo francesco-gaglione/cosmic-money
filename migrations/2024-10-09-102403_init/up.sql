@@ -25,6 +25,12 @@ CREATE TABLE money_transaction (
   FOREIGN KEY (transaction_category) REFERENCES category(id)
 );
 
+CREATE TABLE currency (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  label VARCHAR NOT NULL,
+  symbol VARCHAR(3) NOT NULL
+);
+
 INSERT INTO account (name, account_type, initial_balance, account_description)
 VALUES ('Checking Account', 'Bank', 1000.00, "account description");
 
@@ -40,3 +46,45 @@ VALUES ('Investments', 'Income or expenses related to investments', FALSE);
 
 INSERT INTO category (name, category_description, is_income)
 VALUES ('Entertainment', 'Expenses for leisure activities', FALSE);
+
+INSERT INTO currency (label, symbol) VALUES 
+  ('US Dollar', 'USD'),
+  ('Euro', 'EUR'),
+  ('Japanese Yen', 'JPY'),
+  ('British Pound', 'GBP'),
+  ('Australian Dollar', 'AUD'),
+  ('Canadian Dollar', 'CAD'),
+  ('Swiss Franc', 'CHF'),
+  ('Chinese Yuan', 'CNY'),
+  ('Swedish Krona', 'SEK'),
+  ('New Zealand Dollar', 'NZD'),
+  ('Mexican Peso', 'MXN'),
+  ('Singapore Dollar', 'SGD'),
+  ('Hong Kong Dollar', 'HKD'),
+  ('Norwegian Krone', 'NOK'),
+  ('South Korean Won', 'KRW'),
+  ('Turkish Lira', 'TRY'),
+  ('Russian Ruble', 'RUB'),
+  ('Indian Rupee', 'INR'),
+  ('Brazilian Real', 'BRL'),
+  ('South African Rand', 'ZAR'),
+  ('Philippine Peso', 'PHP'),
+  ('Czech Koruna', 'CZK'),
+  ('Indonesian Rupiah', 'IDR'),
+  ('Malaysian Ringgit', 'MYR'),
+  ('Hungarian Forint', 'HUF'),
+  ('Icelandic Krona', 'ISK'),
+  ('Polish Zloty', 'PLN'),
+  ('Thai Baht', 'THB'),
+  ('Ukrainian Hryvnia', 'UAH'),
+  ('Israeli New Shekel', 'ILS'),
+  ('Chilean Peso', 'CLP'),
+  ('Romanian Leu', 'RON'),
+  ('Danish Krone', 'DKK'),
+  ('New Taiwan Dollar', 'TWD'),
+  ('Pakistani Rupee', 'PKR'),
+  ('Argentine Peso', 'ARS'),
+  ('Colombian Peso', 'COP'),
+  ('Vietnamese Dong', 'VND'),
+  ('Bangladeshi Taka', 'BDT'),
+  ('Egyptian Pound', 'EGP');
