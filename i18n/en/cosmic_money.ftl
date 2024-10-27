@@ -55,3 +55,4 @@ month-10 = October
 month-11 = November
 month-12 = December
 
+currency = Currency

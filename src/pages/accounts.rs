@@ -5,7 +5,9 @@ use cosmic::{
 };
 
 use crate::{
-    app, fl,
+    app,
+    config::Config,
+    fl,
     models::{Account, NewAccount, UpdateAccount},
     STORE,
 };
@@ -28,6 +30,7 @@ pub enum AccountsMessage {
 }
 
 pub struct Accounts {
+    currency_symbol: String,
     accounts: Vec<Account>,
     add_account_view_visible: bool,
     form_new_account_name_value: String,
@@ -43,8 +46,13 @@ pub struct Accounts {
 impl Default for Accounts {
     fn default() -> Self {
         let mut store = STORE.lock().unwrap();
+        let config = Config::load();
+
         let accounts = store.get_accounts();
+        let currency_symbol = store.get_currency_symbol_by_id(config.1.currency_id);
+
         Self {
+            currency_symbol: currency_symbol.unwrap_or_else(|_| "USD".to_string()),
             accounts: if let Ok(accounts) = accounts {
                 accounts
             } else {
@@ -92,7 +100,7 @@ impl Accounts {
                                     "{}: {} {}",
                                     "Balance",
                                     self.read_account_balance(account.id),
-                                    "$"
+                                    self.currency_symbol
                                 )))
                                 .width(Length::Fill),
                         )

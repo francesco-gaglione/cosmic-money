@@ -23,6 +23,7 @@ chrono = "0.4.38"
 # libsqlite3-sys = { version = "0.30", features = ["bundled"] }
 dotenvy = "0.15"
 thiserror = "1.0.64"
+serde = { version = "1", features = ["serde_derive"] }
 
 [dependencies.libcosmic]
 git = "https://github.com/pop-os/libcosmic.git"

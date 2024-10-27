@@ -7,7 +7,9 @@ use cosmic::{
 };
 
 use crate::{
-    app, fl,
+    app,
+    config::Config,
+    fl,
     models::{Account, Category, MoneyTransaction, NewMoneyTransaction},
     widget::date_picker::date_picker,
     STORE,
@@ -28,6 +30,7 @@ pub enum TransactionMessage {
 }
 
 pub struct Transactions {
+    currency_symbol: String,
     add_transaction_view: bool,
     categories: Vec<Category>,
     accounts: Vec<Account>,
@@ -44,8 +47,11 @@ pub struct Transactions {
 impl Default for Transactions {
     fn default() -> Self {
         let mut store = STORE.lock().unwrap();
+        let config = Config::load();
         let transactions = store.get_money_transactions().unwrap_or_else(|_| vec![]);
+        let currency_symbol = store.get_currency_symbol_by_id(config.1.currency_id);
         Self {
+            currency_symbol: currency_symbol.unwrap_or_else(|_| "USD".to_string()),
             add_transaction_view: false,
             categories: store.get_categories().unwrap_or_else(|_| vec![]),
             accounts: store.get_accounts().unwrap_or_else(|_| vec![]),
@@ -139,10 +145,11 @@ impl Transactions {
                             widget::row()
                                 .push(
                                     widget::text::text(format!(
-                                        "{}: {}{}",
+                                        "{}: {}{} {}",
                                         fl!("amount"),
                                         if t.is_expense { "-" } else { "+" },
-                                        t.amount
+                                        t.amount,
+                                        self.currency_symbol
                                     ))
                                     .width(Length::Fill),
                                 )

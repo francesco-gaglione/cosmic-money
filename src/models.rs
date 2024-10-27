@@ -94,3 +94,18 @@ pub struct NewMoneyTransaction {
     pub transaction_date: chrono::NaiveDateTime,
     pub is_expense: bool,
 }
+
+#[derive(Queryable, Selectable, Debug)]
+#[diesel(table_name = crate::schema::currency)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct Currency {
+    pub id: i32,
+    pub label: String,
+    pub symbol: String,
+}
+
+impl AsRef<str> for Currency {
+    fn as_ref(&self) -> &str {
+        &self.label
+    }
+}
