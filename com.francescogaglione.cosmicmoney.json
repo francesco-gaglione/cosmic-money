@@ -12,14 +12,12 @@
     "--socket=wayland",
     "--device=dri",
     "--talk-name=com.system76.CosmicSettingsDaemon",
-    "--filesystem=xdg-config/cosmic:ro",
-    "--talk-name=org.freedesktop.Flatpak",
-    "--filesystem=host",
-    "--filesystem=host-os",
-    "--allow=devel"
+    "--filesystem=xdg-config/cosmic:ro"
   ],
   "build-options": {
-    "append-path": "/usr/lib/sdk/rust-stable/bin"
+    "append-path": "/usr/lib/sdk/rust-stable/bin",
+    "cflags": "-C opt-level=1",
+    "RUST_MIN_STACK": "268435456"
   },
   "modules": [
     {
@@ -27,16 +25,16 @@
       "buildsystem": "simple",
       "build-options": {
         "env": {
-          "CARGO_HOME": "/run/build/cosmicmoney/cargo"
+          "CARGO_HOME": "/run/build/cosmicmoney/cargo",
+          "RUST_MIN_STACK": "268435456"
         }
       },
       "build-commands": [
-        "cargo --offline fetch --manifest-path Cargo.toml --verbose",
-        "cargo --offline build --release --verbose",
-        "install -Dm0755 ./target/release/app_hub_backend /app/bin/app_hub_backend",
-        "install -Dm0755 ./target/release/cosmicmoney /app/bin/cosmicmoney",
-        "install -Dm0644 ./res/cosmicmoney.desktop /app/share/applications/com.francescogaglione.cosmicmoney.desktop",
-        "install -Dm0644 ./res/cosmicmoney.metainfo.xml /app/share/metainfo/com.francescogaglione.cosmicmoney.metainfo.xml",
+        "cargo fetch --manifest-path Cargo.toml --verbose",
+        "cargo build --release --verbose",
+        "install -Dm0755 ./target/release/cosmic_money /app/bin/cosmic_money",
+        "install -Dm0644 ./res/com.francescogaglione.cosmicmoney.desktop /app/share/applications/com.francescogaglione.cosmicmoney.desktop",
+        "install -Dm0644 ./res/com.francescogaglione.cosmicmoney.metainfo.xml /app/share/metainfo/com.francescogaglione.cosmicmoney.metainfo.xml",
         "install -Dm0644 ./res/icons/hicolor/scalable/apps/com.francescogaglione.cosmicmoney.png /app/share/icons/hicolor/scalable/apps/com.francescogaglione.cosmicmoney.png",
         "install -Dm0644 ./res/icons/hicolor/16x16/apps/com.francescogaglione.cosmicmoney.png /app/share/icons/hicolor/16x16/apps/com.francescogaglione.cosmicmoney.png",
         "install -Dm0644 ./res/icons/hicolor/24x24/apps/com.francescogaglione.cosmicmoney.png /app/share/icons/hicolor/24x24/apps/com.francescogaglione.cosmicmoney.png",

@@ -72,5 +72,9 @@ assets = [
         "usr/share/applications/com.example.CosmicAppTemplate.desktop",
         "644",
     ],
-    #    ["res/icons/hicolor/", "usr/share/icons/hicolor/", "644"]
+    [
+        "res/icons/hicolor/",
+        "usr/share/icons/hicolor/",
+        "644",
+    ],
 ]
