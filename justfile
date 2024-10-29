@@ -72,6 +72,17 @@ install:
     for size in `ls {{icons-src}}`; do \
         install -Dm0644 "{{icons-src}}/$size/apps/{{APPID}}.png" "{{icons-dst}}/$size/apps/{{APPID}}.png"; \
     done
+    
+sources-gen:
+  python3 flatpak-cargo-generator.py ./Cargo.lock -o cargo-sources.json
+
+install-sdk:
+  flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
+  flatpak install --noninteractive --user flathub \
+    org.freedesktop.Platform//23.08 \
+    org.freedesktop.Sdk//23.08 \
+    org.freedesktop.Sdk.Extension.rust-stable//23.08 \
+    org.freedesktop.Sdk.Extension.llvm17//23.08
 
 package-flatpak:
     flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --install builddir com.francescogaglione.cosmicmoney.json
