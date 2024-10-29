@@ -1,9 +1,8 @@
 use chrono::{Datelike, Local, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use cosmic::{
     iced::{Alignment, Length, Padding},
-    prelude::CollectionWidget,
-    widget::{self, column, horizontal_space, text_input, vertical_space},
-    Command, Element,
+    widget::{self, column, text_input, Space},
+    Element, Task,
 };
 
 use crate::{
@@ -95,14 +94,14 @@ impl Transactions {
                             .push(
                                 widget::button::text(fl!("add-transaction"))
                                     .on_press(TransactionMessage::AddTransaction)
-                                    .style(widget::button::Style::Suggested),
+                                    .class(widget::button::ButtonClass::Suggested),
                             )
                             .width(Length::Fill)
-                            .align_items(Alignment::End),
+                            .align_x(Alignment::End),
                     ),
             )
             .width(Length::Fill)
-            .align_items(Alignment::Start);
+            .align_x(Alignment::Start);
 
         let month_names = vec![
             fl!("month-1"),  // January
@@ -178,7 +177,7 @@ impl Transactions {
                                 )
                                 .width(Length::Fill),
                         )
-                        .push(vertical_space(Length::from(5)))
+                        .push(Space::with_height(5))
                         .push_maybe(if !t.description.is_empty() {
                             Some(widget::row().push(widget::text::text(format!(
                                 "{}: {}",
@@ -192,11 +191,9 @@ impl Transactions {
                 )
                 .width(Length::Fill)
                 .padding(Padding::new(10.))
-                .style(cosmic::theme::Container::Card);
+                .class(cosmic::theme::Container::Card);
 
-                element = element
-                    .push(container)
-                    .push(vertical_space(Length::from(10)))
+                element = element.push(container).push(Space::with_height(10))
             }
         } else {
             element = element.push(widget::text::text(fl!("no-elements")))
@@ -210,14 +207,14 @@ impl Transactions {
 
         element = element.push(widget::text::title1(fl!("add-transaction")));
 
-        element = element.push(widget::vertical_space(10));
+        element = element.push(Space::with_height(10));
 
         element = element.push(
             widget::segmented_control::horizontal(&self.form_transaction_type)
                 .on_activate(TransactionMessage::FormTransactionTypeChanged),
         );
 
-        element = element.push(widget::vertical_space(10));
+        element = element.push(Space::with_height(10));
 
         element = element.push(
             widget::column()
@@ -229,13 +226,13 @@ impl Transactions {
                 ),
         );
 
-        element = element.push(widget::vertical_space(10));
+        element = element.push(Space::with_height(10));
 
         element = element.push(date_picker(self.form_date, |date| {
             TransactionMessage::FormDateChanged(date)
         }));
 
-        element = element.push(widget::vertical_space(10));
+        element = element.push(Space::with_height(10));
 
         element = element
             .push(
@@ -243,14 +240,14 @@ impl Transactions {
                     .push(
                         widget::column()
                             .push(widget::text::text(fl!("category")))
-                            .push(widget::vertical_space(5))
+                            .push(Space::with_height(Length::from(5)))
                             .push(widget::dropdown(
                                 &self.categories,
                                 self.form_selectected_category,
                                 TransactionMessage::FormCategoryChanged,
                             )),
                     )
-                    .push(horizontal_space(Length::from(20)))
+                    .push(Space::with_width(Length::from(20)))
                     .push(
                         widget::column()
                             .push(widget::text::text(fl!("bank-account")))
@@ -269,25 +266,27 @@ impl Transactions {
                 ),
             );
 
-        element = element.push(vertical_space(Length::from(10))).push(
-            widget::row()
-                .push(
-                    widget::button::text(fl!("add-transaction"))
-                        .on_press(TransactionMessage::SubmitTransaction)
-                        .style(widget::button::Style::Suggested),
-                )
-                .push(widget::horizontal_space(Length::from(10)))
-                .push(
-                    widget::button::text(fl!("cancel"))
-                        .on_press(TransactionMessage::CandellAddTransaction)
-                        .style(widget::button::Style::Destructive),
-                ),
-        );
+        element = element
+            .push(widget::vertical_space().height(Length::from(10)))
+            .push(
+                widget::row()
+                    .push(
+                        widget::button::text(fl!("add-transaction"))
+                            .on_press(TransactionMessage::SubmitTransaction)
+                            .class(widget::button::ButtonClass::Suggested),
+                    )
+                    .push(widget::horizontal_space().width(Length::from(10)))
+                    .push(
+                        widget::button::text(fl!("cancel"))
+                            .on_press(TransactionMessage::CandellAddTransaction)
+                            .class(widget::button::ButtonClass::Destructive),
+                    ),
+            );
 
         element.into()
     }
 
-    pub fn update(&mut self, message: TransactionMessage) -> Command<crate::app::Message> {
+    pub fn update(&mut self, message: TransactionMessage) -> Task<crate::app::Message> {
         let mut commands = Vec::new();
         match message {
             TransactionMessage::UpdatePage => {
@@ -349,7 +348,7 @@ impl Transactions {
                     is_expense,
                 };
                 let _ = store.create_money_transaction(&new_transaction);
-                commands.push(Command::perform(async {}, |_| {
+                commands.push(Task::perform(async {}, |_| {
                     app::Message::Transactions(TransactionMessage::UpdatePage)
                 }));
                 self.add_transaction_view = false;
@@ -362,6 +361,6 @@ impl Transactions {
                 self.form_date = date;
             }
         }
-        Command::batch(commands)
+        Task::batch(commands)
     }
 }

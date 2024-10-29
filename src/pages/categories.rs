@@ -1,8 +1,8 @@
 use chrono::{Datelike, Duration, Local, NaiveDate};
 use cosmic::{
     iced::{Alignment, Length, Padding},
-    widget::{self, horizontal_space},
-    Command, Element,
+    widget::{self, horizontal_space, Space},
+    Element, Task,
 };
 
 use crate::{
@@ -80,17 +80,17 @@ impl Default for Categories {
 impl Categories {
     pub fn add_category_view<'a>(&'a self) -> Element<'a, CategoriesMessage> {
         let mut element = widget::column();
-        element = element.push(widget::vertical_space(Length::from(10)));
+        element = element.push(Space::with_height(10));
         element = element.push(
             widget::container(
                 widget::column()
                     .push(widget::text::title4(fl!("new-category")))
-                    .push(widget::vertical_space(Length::from(10)))
+                    .push(Space::with_height(10))
                     .push(
                         widget::row().push(
                             widget::column()
                                 .push(widget::text::text(fl!("category-name")))
-                                .push(widget::vertical_space(Length::from(3)))
+                                .push(Space::with_height(3))
                                 .push(
                                     cosmic::widget::text_input(
                                         fl!("new-category"),
@@ -100,12 +100,12 @@ impl Categories {
                                 ),
                         ),
                     )
-                    .push(widget::vertical_space(Length::from(10)))
+                    .push(Space::with_height(10))
                     .push(
                         widget::row().push(
                             widget::column()
                                 .push(widget::text::text(fl!("category-description")))
-                                .push(widget::vertical_space(Length::from(3)))
+                                .push(Space::with_height(3))
                                 .push(
                                     cosmic::widget::text_input(
                                         fl!("category-description"),
@@ -115,38 +115,38 @@ impl Categories {
                                 ),
                         ),
                     )
-                    .push(widget::vertical_space(Length::from(10)))
+                    .push(Space::with_height(10))
                     .push(widget::text::text(fl!("category-type")))
                     .push(widget::dropdown(
                         &self.category_types_options,
                         self.selected_category_type,
                         CategoriesMessage::NewCategoryTypeChanged,
                     ))
-                    .push(widget::vertical_space(Length::from(10)))
+                    .push(Space::with_height(10))
                     .push(
                         widget::row()
                             .push(
                                 widget::button::text(fl!("add-category"))
                                     .on_press(CategoriesMessage::NewCategorySubmitted)
-                                    .style(widget::button::Style::Suggested),
+                                    .class(widget::button::ButtonClass::Suggested),
                             )
-                            .push(widget::horizontal_space(Length::from(10)))
+                            .push(Space::with_width(10))
                             .push(
                                 widget::button::text(fl!("cancel"))
                                     .on_press(CategoriesMessage::NewCategoryCancel)
-                                    .style(widget::button::Style::Destructive),
+                                    .class(widget::button::ButtonClass::Destructive),
                             )
                             .width(Length::Fill)
-                            .align_items(Alignment::End),
+                            .align_y(Alignment::End),
                     )
                     .width(Length::Fill),
             )
             .padding(10)
             .width(Length::Fill)
-            .style(cosmic::theme::Container::Card),
+            .class(cosmic::theme::Container::Card),
         );
 
-        element = element.push(widget::vertical_space(Length::from(10)));
+        element = element.push(Space::with_height(10));
 
         element.into()
     }
@@ -170,16 +170,16 @@ impl Categories {
                     widget::button::icon(widget::icon::from_name("edit-symbolic"))
                         .on_press(CategoriesMessage::EditCategory(c.id)),
                 )
-                .align_items(Alignment::End)
+                .align_x(Alignment::End)
                 .width(Length::Fill),
         );
 
         main_col = main_col.push(row);
 
         if self.edit_category_id == Some(c.id) {
-            main_col = main_col.push(widget::vertical_space(Length::from(10)));
+            main_col = main_col.push(Space::with_height(10));
             main_col = main_col.push(widget::divider::horizontal::default());
-            main_col = main_col.push(widget::vertical_space(Length::from(10)));
+            main_col = main_col.push(Space::with_height(10));
             main_col = main_col.push(
                 widget::row().push(
                     widget::column()
@@ -188,7 +188,7 @@ impl Categories {
                             widget::text_input(fl!("category-name"), &self.edit_category_form_name)
                                 .on_input(CategoriesMessage::EditCategoryName),
                         )
-                        .push(widget::vertical_space(Length::from(10)))
+                        .push(Space::with_height(10))
                         .push(widget::text::text(fl!("category-description")))
                         .push(
                             widget::text_input(
@@ -197,25 +197,25 @@ impl Categories {
                             )
                             .on_input(CategoriesMessage::EditCategoryDescription),
                         )
-                        .push(widget::vertical_space(Length::from(10)))
+                        .push(Space::with_height(10))
                         .push(widget::dropdown(
                             &self.category_types_options,
                             self.edit_category_type,
                             CategoriesMessage::EditCategoryTypeChanged,
                         ))
-                        .push(widget::vertical_space(Length::from(10)))
+                        .push(Space::with_height(10))
                         .push(
                             widget::row()
                                 .push(
                                     widget::button::text(fl!("save"))
                                         .on_press(CategoriesMessage::EditCategorySubmitted)
-                                        .style(widget::button::Style::Suggested),
+                                        .class(widget::button::ButtonClass::Suggested),
                                 )
-                                .push(widget::horizontal_space(Length::from(10)))
+                                .push(Space::with_width(10))
                                 .push(
                                     widget::button::text(fl!("cancel"))
                                         .on_press(CategoriesMessage::EditCategoryCancel)
-                                        .style(widget::button::Style::Destructive),
+                                        .class(widget::button::ButtonClass::Destructive),
                                 ),
                         ),
                 ),
@@ -224,7 +224,7 @@ impl Categories {
 
         let element = widget::container(main_col)
             .padding(10)
-            .style(cosmic::theme::Container::Card);
+            .class(cosmic::theme::Container::Card);
 
         element.into()
     }
@@ -233,7 +233,7 @@ impl Categories {
         let mut element = widget::column()
             .padding(Padding::new(10.))
             .width(Length::Fill)
-            .align_items(Alignment::Start);
+            .align_x(Alignment::Start);
 
         element = element.push(
             widget::row()
@@ -248,11 +248,11 @@ impl Categories {
                             widget::row().push(
                                 widget::button::text(fl!("add-category"))
                                     .on_press(CategoriesMessage::AddCategory)
-                                    .style(widget::button::Style::Suggested),
+                                    .class(widget::button::ButtonClass::Suggested),
                             ),
                         )
                         .width(Length::Fill)
-                        .align_items(Alignment::End),
+                        .align_x(Alignment::End),
                 ),
         );
 
@@ -283,29 +283,29 @@ impl Categories {
                             widget::button::icon(widget::icon::from_name("go-previous-symbolic"))
                                 .on_press(CategoriesMessage::PreviousMonth),
                         )
-                        .push(horizontal_space(Length::from(10)))
+                        .push(Space::with_width(10))
                         .push(
                             widget::container(
                                 widget::row()
                                     .push(widget::text::text(
                                         month_names[self.view_month as usize - 1].clone(),
                                     ))
-                                    .push(horizontal_space(Length::from(5)))
+                                    .push(Space::with_width(10))
                                     .push(widget::text::text(self.view_year.to_string())),
                             )
                             .padding(Padding::from(7)),
                         )
-                        .push(horizontal_space(Length::from(10)))
+                        .push(Space::with_width(10))
                         .push(
                             widget::button::icon(widget::icon::from_name("go-next-symbolic"))
                                 .on_press(CategoriesMessage::NextMonth),
                         ),
                 )
-                .align_items(Alignment::Center)
+                .align_x(Alignment::Center)
                 .width(Length::Fill),
         );
 
-        element = element.push(widget::vertical_space(Length::from(10)));
+        element = element.push(Space::with_height(10));
 
         element = element.push(widget::text::title4(fl!("income-categories")));
 
@@ -318,10 +318,10 @@ impl Categories {
         {
             element = element
                 .push(self.category_card(c))
-                .push(widget::vertical_space(Length::from(10)));
+                .push(Space::with_height(10));
         }
 
-        element = element.push(widget::vertical_space(Length::from(10)));
+        element = element.push(Space::with_height(10));
 
         element = element.push(widget::text::title4(fl!("expense-categories")));
 
@@ -334,13 +334,13 @@ impl Categories {
         {
             element = element
                 .push(self.category_card(c))
-                .push(widget::vertical_space(Length::from(10)));
+                .push(Space::with_height(10));
         }
 
         widget::scrollable(element).into()
     }
 
-    pub fn update(&mut self, message: CategoriesMessage) -> Command<crate::app::Message> {
+    pub fn update(&mut self, message: CategoriesMessage) -> Task<crate::app::Message> {
         let mut commands = vec![];
         match message {
             CategoriesMessage::Update => {
@@ -370,7 +370,7 @@ impl Categories {
                 let _ = store.create_category(&new_category);
                 self.add_category_view_active = false;
                 self.form_new_category_name = "".to_string();
-                commands.push(Command::perform(async {}, |_| {
+                commands.push(Task::perform(async {}, |_| {
                     Message::Categories(super::categories::CategoriesMessage::Update)
                 }));
             }
@@ -433,13 +433,13 @@ impl Categories {
                     let mut store = STORE.lock().unwrap();
                     let _ = store.update_category(&update_category);
                     self.edit_category_id = None;
-                    commands.push(Command::perform(async {}, |_| {
+                    commands.push(Task::perform(async {}, |_| {
                         Message::Categories(super::categories::CategoriesMessage::Update)
                     }));
                 }
             }
         }
-        Command::batch(commands)
+        Task::batch(commands)
     }
 
     fn calculate_by_category_id(&self, category_id: i32) -> f32 {

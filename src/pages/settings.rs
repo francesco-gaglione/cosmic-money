@@ -1,5 +1,5 @@
 use crate::{config::Config, fl, models::Currency, STORE};
-use cosmic::{iced::Length, widget, Command, Element};
+use cosmic::{iced::Length, widget, Element, Task};
 
 #[derive(Debug, Clone)]
 pub enum SettingsMessage {
@@ -48,7 +48,7 @@ impl Settings {
         widget::scrollable(main_container).into()
     }
 
-    pub fn update(&mut self, message: SettingsMessage) -> Command<crate::app::Message> {
+    pub fn update(&mut self, message: SettingsMessage) -> Task<crate::app::Message> {
         match message {
             SettingsMessage::CurrencyChanged(index) => {
                 self.selected_currency = Some(index);
@@ -60,6 +60,6 @@ impl Settings {
                 }
             }
         }
-        Command::none()
+        Task::none()
     }
 }

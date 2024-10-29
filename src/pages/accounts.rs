@@ -1,7 +1,7 @@
 use cosmic::{
     iced::{self, Length, Padding},
-    widget::{self, column, settings},
-    Command, Element,
+    widget::{self, column, settings, Space},
+    Element, Task,
 };
 
 use crate::{
@@ -122,7 +122,7 @@ impl Accounts {
                 if let Some(account_id) = self.editing_account {
                     if account_id == account.id {
                         main_col = main_col.push(widget::divider::horizontal::default());
-                        main_col = main_col.push(widget::vertical_space(Length::from(10)));
+                        main_col = main_col.push(Space::with_height(10));
                         main_col = main_col.push(
                             widget::row()
                                 .push(
@@ -137,7 +137,7 @@ impl Accounts {
                                         )
                                         .width(Length::Fill),
                                 )
-                                .push(widget::horizontal_space(Length::from(10)))
+                                .push(Space::with_width(10))
                                 .push(
                                     widget::column()
                                         .push(widget::text::title4(fl!("balance")))
@@ -151,7 +151,7 @@ impl Accounts {
                                         .width(Length::Fill),
                                 ),
                         );
-                        main_col = main_col.push(widget::vertical_space(Length::from(10)));
+                        main_col = main_col.push(Space::with_height(10));
                         main_col = main_col.push(
                             widget::column()
                                 .push(widget::text::text(fl!("description")))
@@ -163,19 +163,19 @@ impl Accounts {
                                     .on_input(AccountsMessage::EditAccountDescription),
                                 ),
                         );
-                        main_col = main_col.push(widget::vertical_space(Length::from(10)));
+                        main_col = main_col.push(Space::with_height(10));
                         main_col = main_col.push(
                             widget::row()
                                 .push(
                                     widget::button::text(fl!("save"))
                                         .on_press(AccountsMessage::EditAccountSubmit)
-                                        .style(widget::button::Style::Suggested),
+                                        .class(widget::button::ButtonClass::Suggested),
                                 )
-                                .push(widget::horizontal_space(Length::from(10)))
+                                .push(Space::with_width(10))
                                 .push(
                                     widget::button::text(fl!("cancel"))
                                         .on_press(AccountsMessage::CloseEditAccount)
-                                        .style(widget::button::Style::Destructive),
+                                        .class(widget::button::ButtonClass::Destructive),
                                 ),
                         )
                     }
@@ -186,23 +186,24 @@ impl Accounts {
                             .title(account.name.to_string())
                             .add(main_col),
                     )
-                    .push(widget::vertical_space(Length::from(20)));
+                    .push(Space::with_height(20));
             }
         } else {
             col = col.push(widget::text::text(fl!("no-elements")));
         }
 
-        widget::container(col)
-            .width(iced::Length::Fill)
-            .height(iced::Length::Shrink)
-            .center_y()
-            .into()
+        widget::scrollable(
+            widget::container(col)
+                .width(iced::Length::Fill)
+                .height(iced::Length::Shrink),
+        )
+        .into()
     }
 
     fn add_account_view<'a>(&'a self) -> Element<'a, AccountsMessage> {
         let mut element = widget::column();
 
-        element = element.push(widget::vertical_space(Length::from(10)));
+        element = element.push(Space::with_height(10));
 
         element = element.push(
             widget::container(
@@ -222,7 +223,7 @@ impl Accounts {
                                     )
                                     .width(Length::Fill),
                             )
-                            .push(widget::horizontal_space(Length::from(10)))
+                            .push(Space::with_width(10))
                             .push(
                                 widget::column()
                                     .push(widget::text::text(fl!("initial-value")))
@@ -238,7 +239,7 @@ impl Accounts {
                                     .width(Length::Fill),
                             ),
                     )
-                    .push(widget::vertical_space(Length::from(10)))
+                    .push(Space::with_height(10))
                     .push(
                         widget::column()
                             .width(Length::Fill)
@@ -252,36 +253,36 @@ impl Accounts {
                                 .on_input(AccountsMessage::NewAccountDescriptionChanged),
                             ),
                     )
-                    .push(widget::vertical_space(Length::from(10)))
+                    .push(Space::with_height(10))
                     .push(
                         widget::row()
                             .push(
                                 widget::button::text(fl!("cancel"))
                                     .on_press(AccountsMessage::CancelNewBankAccount)
-                                    .style(widget::button::Style::Destructive),
+                                    .class(widget::button::ButtonClass::Destructive),
                             )
-                            .push(widget::horizontal_space(Length::from(10)))
+                            .push(Space::with_width(10))
                             .push(
                                 widget::button::text(fl!("add"))
                                     .on_press(AccountsMessage::SubmitNewBankAccount)
-                                    .style(widget::button::Style::Suggested),
+                                    .class(widget::button::ButtonClass::Suggested),
                             )
                             .width(Length::Fill)
-                            .align_items(iced::Alignment::End),
+                            .align_y(iced::Alignment::End),
                     )
                     .width(Length::Fill),
             )
             .width(Length::Fill)
             .padding(Padding::new(10.))
-            .style(cosmic::theme::Container::Card),
+            .class(cosmic::theme::Container::Card),
         );
 
-        element = element.push(widget::vertical_space(Length::from(10)));
+        element = element.push(Space::with_height(10));
 
         element.into()
     }
 
-    pub fn update(&mut self, message: AccountsMessage) -> Command<crate::app::Message> {
+    pub fn update(&mut self, message: AccountsMessage) -> Task<crate::app::Message> {
         let mut commands = Vec::new();
         match message {
             AccountsMessage::Update => {
@@ -324,7 +325,7 @@ impl Accounts {
                 };
                 let mut store = STORE.lock().unwrap();
                 store.create_account(&new_account);
-                commands.push(Command::perform(async {}, |_| {
+                commands.push(Task::perform(async {}, |_| {
                     app::Message::Accounts(AccountsMessage::Update)
                 }));
                 self.add_account_view_visible = false;
@@ -366,15 +367,15 @@ impl Accounts {
                 };
                 let mut store = STORE.lock().unwrap();
                 let _ = store.update_account(&update_account);
-                commands.push(Command::perform(async {}, |_| {
+                commands.push(Task::perform(async {}, |_| {
                     app::Message::Accounts(AccountsMessage::Update)
                 }));
-                commands.push(Command::perform(async {}, |_| {
+                commands.push(Task::perform(async {}, |_| {
                     app::Message::Accounts(AccountsMessage::CloseEditAccount)
                 }));
             }
         }
-        Command::batch(commands)
+        Task::batch(commands)
     }
 
     fn read_account_balance(&self, account_id: i32) -> f32 {

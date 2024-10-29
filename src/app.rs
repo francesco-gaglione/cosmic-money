@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use crate::core::nav::NavPage;
 use crate::{fl, pages};
-use cosmic::app::{self, Command, Core};
+use cosmic::app::{self, Core, Task};
 use cosmic::iced::{Alignment, Length};
 use cosmic::widget::{self, menu, nav_bar};
 use cosmic::{cosmic_theme, theme, Application, ApplicationExt, Element};
@@ -110,7 +110,7 @@ impl Application for MoneyManager {
     /// - `core` is used to passed on for you by libcosmic to use in the core of your own application.
     /// - `flags` is used to pass in any data that your application needs to use before it starts.
     /// - `Command` type is used to send messages to your application. `Command::none()` can be used to send no messages to your application.
-    fn init(core: Core, _flags: Self::Flags) -> (Self, Command<Self::Message>) {
+    fn init(core: Core, _flags: Self::Flags) -> (Self, Task<Self::Message>) {
         let mut nav = nav_bar::Model::default();
 
         for &nav_page in NavPage::all() {
@@ -137,7 +137,7 @@ impl Application for MoneyManager {
             transactions: pages::transactions::Transactions::default(),
         };
 
-        let command = app.update_titles();
+        let command = app.update_title();
 
         (app, command)
     }
@@ -170,7 +170,7 @@ impl Application for MoneyManager {
             .padding(spacing.space_xs)
             .width(Length::Fill)
             .height(Length::Fill)
-            .align_items(Alignment::Center)
+            .align_x(Alignment::Center)
             .into()
     }
 
@@ -180,7 +180,7 @@ impl Application for MoneyManager {
     fn update(
         &mut self,
         message: Self::Message,
-    ) -> cosmic::iced::Command<app::Message<Self::Message>> {
+    ) -> cosmic::iced::Task<app::Message<Self::Message>> {
         let mut commands = vec![];
         match message {
             Message::LaunchUrl(url) => {
@@ -216,7 +216,7 @@ impl Application for MoneyManager {
                     .map(cosmic::app::Message::App),
             ),
         }
-        Command::batch(commands)
+        Task::batch(commands)
     }
 
     /// Display a context drawer if the context page is requested.
@@ -231,11 +231,11 @@ impl Application for MoneyManager {
     }
 
     /// Called when a nav item is selected.
-    fn on_nav_select(&mut self, id: nav_bar::Id) -> Command<Self::Message> {
+    fn on_nav_select(&mut self, id: nav_bar::Id) -> Task<Self::Message> {
         // Activate the page in the model.
         self.nav.activate(id);
 
-        self.update_titles()
+        self.update_title()
     }
 }
 
@@ -245,8 +245,9 @@ impl MoneyManager {
         let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
 
         let icon = widget::svg(widget::svg::Handle::from_memory(
-            &include_bytes!("../res/icons/hicolor/128x128/apps/com.francescogaglione.cosmicmoney.png")
-                [..],
+            &include_bytes!(
+                "../res/icons/hicolor/128x128/apps/com.francescogaglione.cosmicmoney.png"
+            )[..],
         ));
 
         let title = widget::text::title3(fl!("app-title"));
@@ -259,23 +260,24 @@ impl MoneyManager {
             .push(icon)
             .push(title)
             .push(link)
-            .align_items(Alignment::Center)
+            .align_x(Alignment::Center)
             .spacing(space_xxs)
             .into()
     }
 
     /// Updates the header and window titles.
-    pub fn update_titles(&mut self) -> Command<Message> {
+    pub fn update_title(&mut self) -> Task<Message> {
         let mut window_title = fl!("app-title");
-        let mut header_title = String::new();
 
         if let Some(page) = self.nav.text(self.nav.active()) {
             window_title.push_str(" — ");
             window_title.push_str(page);
-            header_title.push_str(page);
         }
 
-        self.set_header_title(header_title);
-        self.set_window_title(window_title)
+        if let Some(id) = self.core.main_window_id() {
+            self.set_window_title(window_title, id)
+        } else {
+            Task::none()
+        }
     }
 }
