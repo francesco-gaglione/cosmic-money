@@ -4,7 +4,7 @@
   "runtime-version": "24.08",
   "sdk": "org.freedesktop.Sdk",
   "sdk-extensions": ["org.freedesktop.Sdk.Extension.rust-stable"],
-  "command": "cosmicmoney",
+  "command": "cosmic_money",
   "finish-args": [
     "--share=ipc",
     "--share=network",
@@ -12,26 +12,25 @@
     "--socket=wayland",
     "--device=dri",
     "--talk-name=com.system76.CosmicSettingsDaemon",
-    "--filesystem=xdg-config/cosmic:ro"
+    "--filesystem=xdg-config/cosmic:rw"
   ],
   "build-options": {
     "append-path": "/usr/lib/sdk/rust-stable/bin",
-    "cflags": "-C opt-level=1",
-    "RUST_MIN_STACK": "268435456"
+    "env": {
+      "CARGO_HOME": "/run/build/cosmic_money/cargo"
+    }
   },
   "modules": [
     {
-      "name": "cosmicmoney",
+      "name": "cosmic_money",
       "buildsystem": "simple",
       "build-options": {
         "env": {
-          "CARGO_HOME": "/run/build/cosmicmoney/cargo",
-          "RUST_MIN_STACK": "268435456"
+          "CARGO_HOME": "/run/build/cosmic_money/cargo"
         }
       },
       "build-commands": [
-        "cargo fetch --manifest-path Cargo.toml --verbose",
-        "cargo build --release --verbose",
+        "cargo --offline build --release --verbose",
         "install -Dm0755 ./target/release/cosmic_money /app/bin/cosmic_money",
         "install -Dm0644 ./res/com.francescogaglione.cosmicmoney.desktop /app/share/applications/com.francescogaglione.cosmicmoney.desktop",
         "install -Dm0644 ./res/com.francescogaglione.cosmicmoney.metainfo.xml /app/share/metainfo/com.francescogaglione.cosmicmoney.metainfo.xml",

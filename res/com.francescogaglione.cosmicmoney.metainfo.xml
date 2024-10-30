@@ -4,14 +4,16 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-only</project_license>
   <project_group>COSMIC</project_group>
-  <developer_name>Francesco Pio Gaglione</developer_name>
+  <developer id="com.francescogaglione">
+     <name>Francesco Pio Gaglione</name>
+   </developer>
   <update_contact>francesco.gaglione.p@gmail.com</update_contact>
   <url type="homepage">https://github.com/francesco-gaglione/money_manager</url>
   <url type="bugtracker">https://github.com/francesco-gaglione/money_manager/issues</url>
   <name>Cosmic money</name>
   <summary>Simple money manager</summary>
   <description>
-    <p>A simble money manager for COSMIC desktop</p>
+    <p>A simple and intuitive money manager designed for the COSMIC desktop environment. Easily track expenses, manage budgets, and monitor financial health all in one place.</p>
   </description>
   <launchable type="desktop-id">com.francescogaglione.cosmicmoney.desktop</launchable>
   <icon type="remote" height="256" width="256">https://github.com/francesco-gaglione/money_manager/blob/main/res/icons/hicolor/256x256/apps/com.francescogaglione.cosmicmoney.png?raw=true</icon>
@@ -21,11 +23,8 @@
     </screenshot>
   </screenshots>
   <provides>
-    <mimetypes>
-      <mimetype>text/plain</mimetype>
-    </mimetypes>
-    <binaries>
-      <binary>cosmic_money</binary>
-    </binaries>
+      <id>com.system76.CosmicApplication</id>
+      <binary>money_manager</binary>
   </provides>
+  <content_rating type="oars-1.1" />
 </component>
