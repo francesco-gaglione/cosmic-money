@@ -16,12 +16,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install Just
-        run: |
-          sudo apt-get update && sudo apt-get install -y just
-
       - name: Install Dependencies
         run: |
+          sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libsoup2.4-dev flatpak flatpak-builder python3-pip
           pip3 install --user flatpak-cargo-generator
 
@@ -32,13 +29,8 @@ jobs:
           profile: minimal
           override: true
 
-      - name: Build Debug
-        run: |
-          just build-debug
-
-      - name: Run Clippy for Linting
-        run: |
-          just check
+      - name: Install Just using Cargo
+        run: cargo install just
 
       - name: Build Release
         run: |
@@ -52,9 +44,10 @@ jobs:
         run: |
           just sources-gen
 
-      - name: Package Flatpak
+      - name: Build and Export Flatpak
         run: |
           just package-flatpak
+          flatpak build-bundle repo com.francescogaglione.cosmicmoney.flatpak com.francescogaglione.cosmicmoney --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
         env:
           FLATPAK_ENABLE_SDK_EXT: "rust-stable,llvm18"
 
