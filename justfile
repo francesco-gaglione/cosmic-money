@@ -85,9 +85,9 @@ install-sdk:
     org.freedesktop.Sdk.Extension.llvm18//24.08
 
 package-flatpak:
-    flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --install builddir com.francescogaglione.cosmicmoney.json
-    flatpak build-bundle repo com.francescogaglione.cosmicmoney.flatpak com.francescogaglione.cosmicmoney --runtime-repo=https://github.com/francescogaglione/cosmicmoney
-
+    flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --install builddir com.francescogaglione.cosmicmoney.json --verbose
+    flatpak build-bundle repo com.francescogaglione.cosmicmoney.flatpak com.francescogaglione.cosmicmoney --runtime-repo=https://github.com/francesco-gaglione/money_manager
+    
 debpkg: build-release
     cargo deb --no-build
 

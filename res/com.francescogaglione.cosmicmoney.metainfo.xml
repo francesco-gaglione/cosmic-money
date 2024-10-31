@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>com.example.cosmicmoney</id>
+  <id>com.francescogaglione.cosmicmoney</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-only</project_license>
   <project_group>COSMIC</project_group>
@@ -18,13 +18,18 @@
   <launchable type="desktop-id">com.francescogaglione.cosmicmoney.desktop</launchable>
   <icon type="remote" height="256" width="256">https://github.com/francesco-gaglione/money_manager/blob/main/res/icons/hicolor/256x256/apps/com.francescogaglione.cosmicmoney.png?raw=true</icon>
   <screenshots>
-  <screenshot type="default">
+    <screenshot type="default">
       <image>https://github.com/francesco-gaglione/money_manager/blob/main/res/screenshots/categories.png?raw=true</image>
+      <caption>Categories</caption>
     </screenshot>
   </screenshots>
   <provides>
-      <id>com.system76.CosmicApplication</id>
       <binary>money_manager</binary>
   </provides>
   <content_rating type="oars-1.1" />
+  <releases>
+      <release version="0.1.0" date="2024-10-30">
+          <description>First version</description>
+      </release>
+  </releases>
 </component>

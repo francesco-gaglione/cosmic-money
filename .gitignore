@@ -16,3 +16,4 @@ Cargo.lock
 .flatpak-builder
 
 cosmic-money.db
+repo

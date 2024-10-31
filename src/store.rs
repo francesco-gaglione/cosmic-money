@@ -1,8 +1,8 @@
 use crate::{
     errors::DataStoreError,
+    get_database_url,
     models::{self, Account, NewAccount},
     schema::{self, account, category, money_transaction},
-    DATABASE_URL,
 };
 use chrono::NaiveDate;
 use diesel::prelude::*;
@@ -19,9 +19,11 @@ pub struct Store {
 
 impl Default for Store {
     fn default() -> Self {
+        let database_url = get_database_url();
         Self {
-            connection: SqliteConnection::establish(DATABASE_URL)
-                .unwrap_or_else(|_| panic!("Error connecting to {}", DATABASE_URL)),
+            connection: SqliteConnection::establish(database_url.to_str().unwrap()).unwrap_or_else(
+                |_| panic!("Error connecting to {}", database_url.to_str().unwrap()),
+            ),
         }
     }
 }
