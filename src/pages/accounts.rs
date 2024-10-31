@@ -288,9 +288,12 @@ impl Accounts {
             AccountsMessage::Update => {
                 log::info!("updating accounts");
                 let mut store = STORE.lock().unwrap();
+                let config = Config::load();
                 let accounts = store.get_accounts();
+                let currency_symbol = store.get_currency_symbol_by_id(config.1.currency_id);
                 if let Ok(accounts) = accounts {
                     self.accounts = accounts;
+                    self.currency_symbol = currency_symbol.unwrap_or_else(|_| "USD".to_string());
                 }
             }
             AccountsMessage::AddAccountView => {

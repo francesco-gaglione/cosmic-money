@@ -292,9 +292,12 @@ impl Transactions {
             TransactionMessage::UpdatePage => {
                 log::info!("updating page");
                 let mut store = STORE.lock().unwrap();
+                let config = Config::load();
+                let currency_symbol = store.get_currency_symbol_by_id(config.1.currency_id);
                 self.transactions = store.get_money_transactions().unwrap_or_else(|_| vec![]);
                 self.categories = store.get_categories().unwrap_or_else(|_| vec![]);
                 self.accounts = store.get_accounts().unwrap_or_else(|_| vec![]);
+                self.currency_symbol = currency_symbol.unwrap_or_else(|_| "USD".to_string());
             }
             TransactionMessage::AddTransaction => {
                 self.add_transaction_view = true;

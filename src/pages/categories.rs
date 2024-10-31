@@ -346,9 +346,12 @@ impl Categories {
             CategoriesMessage::Update => {
                 log::info!("updating category page");
                 let mut store = STORE.lock().unwrap();
+                let config = Config::load();
+                let currency_symbol = store.get_currency_symbol_by_id(config.1.currency_id);
                 let categories = store.get_categories();
                 if let Ok(categories) = categories {
                     self.categories = categories;
+                    self.currency_symbol = currency_symbol.unwrap_or_else(|_| "USD".to_string());
                 }
             }
             CategoriesMessage::AddCategory => {
