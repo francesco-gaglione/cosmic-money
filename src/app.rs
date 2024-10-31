@@ -252,8 +252,10 @@ impl MoneyManager {
 
         let title = widget::text::title3(fl!("app-title"));
 
-        let link = widget::button::link("link")
-            .on_press(Message::LaunchUrl("link".to_string()))
+        let link = widget::button::link("Home")
+            .on_press(Message::LaunchUrl(
+                "https://github.com/francesco-gaglione/money_manager".to_string(),
+            ))
             .padding(0);
 
         widget::column()
