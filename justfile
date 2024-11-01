@@ -86,7 +86,7 @@ install-sdk:
 
 package-flatpak:
     flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --install builddir com.francescogaglione.cosmicmoney.json --verbose
-    flatpak build-bundle repo com.francescogaglione.cosmicmoney.flatpak com.francescogaglione.cosmicmoney --runtime-repo=https://github.com/francesco-gaglione/money_manager
+    flatpak build-bundle repo com.francescogaglione.cosmicmoney.flatpak com.francescogaglione.cosmicmoney --runtime-repo=https://github.com/francesco-gaglione/cosmic-money
     
 debpkg: build-release
     cargo deb --no-build

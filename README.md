@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/francesco-gaglione/money_manager/blob/main/res/icons/hicolor/256x256/apps/com.francescogaglione.cosmicmoney.png?raw=true" alt="Logo" width="200px">
+  <img src="https://github.com/francesco-gaglione/cosmic-money/blob/main/res/icons/hicolor/256x256/apps/com.francescogaglione.cosmicmoney.png?raw=true" alt="Logo" width="200px">
 </p>
 
 # Cosmic Money
@@ -28,10 +28,10 @@ To install the application from source, follow these steps:
 
 ```bash
 # Clone the repository
-git clone https://github.com/francesco-gaglione/money_manager
+git clone https://github.com/francesco-gaglione/cosmic-money
 
 # Enter the project directory
-cd money_manager
+cd cosmic-money
 
 # Build the Release version for better performance
 just build-release

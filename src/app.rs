@@ -246,7 +246,7 @@ impl MoneyManager {
 
         let link = widget::button::link("Home")
             .on_press(Message::LaunchUrl(
-                "https://github.com/francesco-gaglione/money_manager".to_string(),
+                "https://github.com/francesco-gaglione/cosmic-money".to_string(),
             ))
             .padding(0);
 
