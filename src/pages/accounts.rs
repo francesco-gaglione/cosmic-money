@@ -12,6 +12,8 @@ use crate::{
     STORE,
 };
 
+use super::transactions::TransactionMessage;
+
 #[derive(Debug, Clone)]
 pub enum AccountsMessage {
     Update,
@@ -371,6 +373,9 @@ impl Accounts {
                 let _ = store.update_account(&update_account);
                 commands.push(Task::perform(async {}, |_| {
                     app::Message::Accounts(AccountsMessage::Update)
+                }));
+                commands.push(Task::perform(async {}, |_| {
+                    app::Message::Transactions(TransactionMessage::UpdatePage)
                 }));
                 commands.push(Task::perform(async {}, |_| {
                     app::Message::Accounts(AccountsMessage::CloseEditAccount)

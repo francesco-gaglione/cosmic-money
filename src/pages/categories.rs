@@ -6,12 +6,14 @@ use cosmic::{
 };
 
 use crate::{
-    app::Message,
+    app::{self, Message},
     config::Config,
     fl,
     models::{Category, NewCategory, UpdateCategory},
     STORE,
 };
+
+use super::transactions::TransactionMessage;
 
 #[derive(Debug, Clone)]
 pub enum CategoriesMessage {
@@ -375,6 +377,9 @@ impl Categories {
                 self.form_new_category_name = "".to_string();
                 commands.push(Task::perform(async {}, |_| {
                     Message::Categories(super::categories::CategoriesMessage::Update)
+                }));
+                commands.push(Task::perform(async {}, |_| {
+                    app::Message::Transactions(TransactionMessage::UpdatePage)
                 }));
             }
             CategoriesMessage::EditCategoryName(value) => {

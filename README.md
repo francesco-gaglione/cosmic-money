@@ -31,7 +31,7 @@ To install the application from source, follow these steps:
 git clone https://github.com/francesco-gaglione/money_manager
 
 # Enter the project directory
-cd CosmicMoney
+cd money_manager
 
 # Build the Release version for better performance
 just build-release
@@ -59,7 +59,7 @@ Here’s a preview of **Cosmic Money**:
 
 ### Transactions
 
-![Screenshot of transactions](./screenshots/add-transaction.png)
+![Screenshot of transactions](./screenshots/transactions.png)
 
 ## Contributing
 
