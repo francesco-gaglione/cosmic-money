@@ -42,6 +42,8 @@ pub enum Message {
     Transactions(pages::transactions::TransactionMessage),
     Settings(pages::settings::SettingsMessage),
     Welcome(pages::welcome::WelcomeMessage),
+
+    GoToAccounts,
 }
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
@@ -203,6 +205,10 @@ impl Application for MoneyManager {
                         .update(welcome_message)
                         .map(cosmic::app::Message::App),
                 );
+            }
+            Message::GoToAccounts => {
+                self.nav.activate_position(0);
+                self.core.nav_bar_set_toggled(true);
             }
         }
         Task::batch(commands)

@@ -30,21 +30,6 @@ CREATE TABLE currency (
   symbol VARCHAR(3) NOT NULL
 );
 
-INSERT INTO account (name, initial_balance, account_description)
-VALUES ('Checking Account',  1000.00, "account description");
-
-INSERT INTO category (name, category_description, is_income)
-VALUES ('Groceries', 'Expenses for food and household supplies', FALSE);
-
-INSERT INTO category (name, category_description, is_income)
-VALUES ('Salary', 'Income from employment', TRUE);
-
-INSERT INTO category (name, category_description, is_income)
-VALUES ('Investments', 'Income or expenses related to investments', FALSE);
-
-INSERT INTO category (name, category_description, is_income)
-VALUES ('Entertainment', 'Expenses for leisure activities', FALSE);
-
 INSERT INTO currency (label, symbol) VALUES
   ('US Dollar', 'USD'),
   ('Euro', 'EUR'),

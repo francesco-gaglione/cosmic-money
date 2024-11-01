@@ -1,3 +1,4 @@
+use crate::app;
 use crate::models::{NewAccount, NewCategory};
 use crate::{config::Config, fl, models::Currency, STORE};
 use cosmic::iced::alignment::Horizontal;
@@ -7,6 +8,11 @@ use cosmic::{
     widget::{self, Space},
     Element, Task,
 };
+
+use super::accounts::AccountsMessage;
+use super::categories::CategoriesMessage;
+use super::settings::SettingsMessage;
+use super::transactions::TransactionMessage;
 
 #[derive(Debug, Clone)]
 pub enum WelcomeMessage {
@@ -24,6 +30,7 @@ pub enum WelcomeMessage {
     NewAccountSubmitted,
     NewAccountCancel,
     DeleteAccount(NewAccount),
+    Setup,
 }
 
 pub struct Welcome {
@@ -140,9 +147,13 @@ impl Welcome {
         );
 
         main_col = main_col.push(Space::with_height(10));
-        main_col = main_col.push(widget::row().push(
-            widget::button::text(fl!("setup")).class(widget::button::ButtonClass::Suggested),
-        ));
+        main_col = main_col.push(
+            widget::row().push(
+                widget::button::text(fl!("setup"))
+                    .on_press(WelcomeMessage::Setup)
+                    .class(widget::button::ButtonClass::Suggested),
+            ),
+        );
 
         let main_container = widget::container(main_col);
 
@@ -449,6 +460,9 @@ impl Welcome {
                 };
 
                 self.accounts.push(new_account);
+                self.form_new_account_name = "".to_string();
+                self.form_new_account_description = "".to_string();
+                self.form_new_account_balance = "0".to_string();
                 self.add_account_toggled = false;
             }
             WelcomeMessage::NewAccountCancel => {
@@ -459,6 +473,36 @@ impl Welcome {
             }
             WelcomeMessage::DeleteAccount(delete_account) => {
                 self.accounts.retain(|a| a.name != delete_account.name);
+            }
+            WelcomeMessage::Setup => {
+                let mut store = STORE.lock().unwrap();
+                store.create_accounts(&self.accounts);
+                store.create_categories(&self.income_categories);
+                store.create_categories(&self.expense_categories);
+                if let Some(selected_currency) = self
+                    .currency_list
+                    .get(self.selected_currency.unwrap())
+                    .clone()
+                {
+                    let mut config = Config::load();
+                    let _ = config
+                        .1
+                        .set_currency_id(&config.clone().0.unwrap(), selected_currency.id);
+                    let _ = config.1.set_is_user_initialized(&config.0.unwrap(), true);
+                }
+                commands.push(Task::perform(async {}, |_| app::Message::GoToAccounts));
+                commands.push(Task::perform(async {}, |_| {
+                    app::Message::Transactions(TransactionMessage::UpdatePage)
+                }));
+                commands.push(Task::perform(async {}, |_| {
+                    app::Message::Accounts(AccountsMessage::Update)
+                }));
+                commands.push(Task::perform(async {}, |_| {
+                    app::Message::Categories(CategoriesMessage::Update)
+                }));
+                commands.push(Task::perform(async {}, |_| {
+                    app::Message::Settings(SettingsMessage::Update)
+                }));
             }
         }
         Task::batch(commands)

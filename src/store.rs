@@ -6,6 +6,7 @@ use crate::{
 };
 use chrono::NaiveDate;
 use diesel::prelude::*;
+use diesel::result::Error as DieselError;
 use diesel::{Connection, RunQueryDsl, SelectableHelper, SqliteConnection};
 use models::*;
 use schema::account::dsl::*;
@@ -40,6 +41,19 @@ impl Store {
         }
 
         Ok(())
+    }
+
+    pub fn create_accounts(&mut self, new_accounts: &[NewAccount]) -> Result<(), DataStoreError> {
+        self.connection
+            .transaction::<_, DieselError, _>(|conn| {
+                for new_account in new_accounts {
+                    diesel::insert_into(account::table)
+                        .values(new_account)
+                        .execute(conn)?;
+                }
+                Ok(())
+            })
+            .map_err(|e| DataStoreError::InsertError(e.to_string()))
     }
 
     pub fn update_account(&mut self, update_account: &UpdateAccount) -> Result<(), DataStoreError> {
@@ -146,6 +160,22 @@ impl Store {
         }
 
         Ok(())
+    }
+
+    pub fn create_categories(
+        &mut self,
+        new_categories: &[NewCategory],
+    ) -> Result<(), DataStoreError> {
+        self.connection
+            .transaction::<_, DieselError, _>(|conn| {
+                for new_category in new_categories {
+                    diesel::insert_into(category::table)
+                        .values(new_category)
+                        .execute(conn)?;
+                }
+                Ok(())
+            })
+            .map_err(|e| DataStoreError::InsertError(e.to_string()))
     }
 
     pub fn update_category(

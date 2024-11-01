@@ -7,4 +7,4 @@ custom_type_derives = ["diesel::query_builder::QueryId", "Clone"]
 
 #TODO changeme
 [migrations_directory]
-dir = "/home/kekko/projects/personal/money_manager/migrations"
+dir = "./migrations"
