@@ -15,6 +15,7 @@ pub enum WelcomeMessage {
     NewCategoryNameChanged(String),
     NewCategoryDescriptionChanged(String),
     NewCategorySubmitted(bool),
+    NewCategoryCancel,
     DeleteCategory(NewCategory, bool),
 }
 
@@ -224,6 +225,12 @@ impl Welcome {
                                     .on_press(WelcomeMessage::NewCategorySubmitted(is_income))
                                     .class(widget::button::ButtonClass::Suggested),
                             )
+                            .push(Space::with_width(5))
+                            .push(
+                                widget::button::text(fl!("cancel"))
+                                    .on_press(WelcomeMessage::NewCategoryCancel)
+                                    .class(widget::button::ButtonClass::Destructive),
+                            )
                             .width(Length::Fill)
                             .align_y(Alignment::End),
                     )
@@ -265,18 +272,28 @@ impl Welcome {
                 self.form_new_category_description = value;
             }
             WelcomeMessage::NewCategorySubmitted(is_income) => {
-                let new_category = NewCategory {
-                    name: self.form_new_category_name.clone(),
-                    is_income,
-                    category_description: self.form_new_category_description.clone(),
-                };
-                if is_income {
-                    self.income_categories.push(new_category);
-                    self.add_income_toogled = false;
-                } else {
-                    self.expense_categories.push(new_category);
-                    self.add_expense_toogled = false;
+                if !self.form_new_category_name.is_empty() {
+                    let new_category = NewCategory {
+                        name: self.form_new_category_name.clone(),
+                        is_income,
+                        category_description: self.form_new_category_description.clone(),
+                    };
+                    if is_income {
+                        self.income_categories.push(new_category);
+                        self.add_income_toogled = false;
+                    } else {
+                        self.expense_categories.push(new_category);
+                        self.add_expense_toogled = false;
+                    }
+                    self.form_new_category_name = "".to_string();
+                    self.form_new_category_description = "".to_string();
                 }
+            }
+            WelcomeMessage::NewCategoryCancel => {
+                self.form_new_category_name = "".to_string();
+                self.form_new_category_description = "".to_string();
+                self.add_income_toogled = false;
+                self.add_expense_toogled = false;
             }
             WelcomeMessage::DeleteCategory(delete_category, is_income) => {
                 if is_income {
