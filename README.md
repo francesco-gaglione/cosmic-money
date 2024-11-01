@@ -59,7 +59,7 @@ Here’s a preview of **Cosmic Money**:
 
 ### Transactions
 
-![Screenshot of transactions](./screenshots/transactions.png)
+![Screenshot of transactions](./res/screenshots/transactions.png)
 
 ## Contributing
 
