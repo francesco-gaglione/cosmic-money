@@ -321,8 +321,7 @@ impl Accounts {
             }
             AccountsMessage::SubmitNewBankAccount => {
                 let new_account = NewAccount {
-                    name: self.form_new_account_name_value.as_str(),
-                    account_type: "",
+                    name: self.form_new_account_name_value.clone(),
                     initial_balance: self.new_account_initial_value,
                     account_description: self.new_account_description.clone(),
                 };
@@ -364,7 +363,7 @@ impl Accounts {
                 let difference: f32 = new_balance - initial_balance;
                 let update_account = UpdateAccount {
                     id,
-                    name: self.edit_account_name.as_str(),
+                    name: self.edit_account_name.clone(),
                     initial_balance: initial_balance + difference,
                     account_description: self.edit_account_description.clone(),
                 };

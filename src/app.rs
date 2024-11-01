@@ -7,7 +7,6 @@ use crate::core::nav::NavPage;
 use crate::{fl, pages};
 use cosmic::app::{self, Core, Task};
 use cosmic::iced::{Alignment, Length};
-use cosmic::widget::segmented_button::Entity;
 use cosmic::widget::{self, menu, nav_bar};
 use cosmic::{cosmic_theme, theme, Application, ApplicationExt, Element};
 

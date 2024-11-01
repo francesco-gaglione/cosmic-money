@@ -1,4 +1,4 @@
-use crate::models::NewCategory;
+use crate::models::{NewAccount, NewCategory};
 use crate::{config::Config, fl, models::Currency, STORE};
 use cosmic::iced::alignment::Horizontal;
 use cosmic::iced::{Alignment, Padding};
@@ -17,6 +17,13 @@ pub enum WelcomeMessage {
     NewCategorySubmitted(bool),
     NewCategoryCancel,
     DeleteCategory(NewCategory, bool),
+    AddAccountToggle,
+    NewAccountNameChanged(String),
+    NewAccountDescriptionChanged(String),
+    NewAccountBalanceChanged(String),
+    NewAccountSubmitted,
+    NewAccountCancel,
+    DeleteAccount(NewAccount),
 }
 
 pub struct Welcome {
@@ -28,6 +35,11 @@ pub struct Welcome {
     add_expense_toogled: bool,
     form_new_category_name: String,
     form_new_category_description: String,
+    accounts: Vec<NewAccount>,
+    add_account_toggled: bool,
+    form_new_account_name: String,
+    form_new_account_description: String,
+    form_new_account_balance: String,
 }
 
 impl Default for Welcome {
@@ -52,6 +64,11 @@ impl Default for Welcome {
             add_expense_toogled: false,
             form_new_category_name: "".to_string(),
             form_new_category_description: "".to_string(),
+            accounts: vec![],
+            add_account_toggled: false,
+            form_new_account_name: "".to_string(),
+            form_new_account_description: "".to_string(),
+            form_new_account_balance: "0".to_string(),
         }
     }
 }
@@ -113,7 +130,9 @@ impl Welcome {
         main_col = main_col.push(Space::with_height(10));
         main_col = main_col.push(
             widget::container(
-                widget::column().push(widget::text::title4(fl!("welcome-initial-accounts"))),
+                widget::column()
+                    .push(widget::text::title4(fl!("welcome-initial-accounts")))
+                    .push(self.accounts_view()),
             )
             .width(Length::Fill)
             .padding(Padding::from(10))
@@ -246,6 +265,104 @@ impl Welcome {
         element.into()
     }
 
+    pub fn accounts_view<'a>(&'a self) -> Element<'a, WelcomeMessage> {
+        let mut element = widget::column();
+
+        if self.accounts.is_empty() {
+            element = element.push(widget::text::text(fl!("no-elements")))
+        }
+
+        for a in &self.accounts {
+            element = element.push(Space::with_height(5));
+            element = element.push(
+                widget::row()
+                    .width(Length::Fill)
+                    .push(
+                        widget::container(widget::text::text(&a.name))
+                            .padding(Padding::new(0.).top(6)),
+                    )
+                    .push(
+                        widget::button::icon(widget::icon::from_name("edit-delete-symbolic"))
+                            .on_press(WelcomeMessage::DeleteAccount(a.clone())),
+                    ),
+            );
+            element = element.push(Space::with_height(5));
+        }
+
+        element = element.push(Space::with_height(10));
+        element = element.push(widget::divider::horizontal::default());
+
+        if self.add_account_toggled {
+            element = element.push(self.add_accounts_view());
+        } else {
+            element = element.push(
+                widget::column()
+                    .push(Space::with_height(5))
+                    .push(
+                        widget::button::text(fl!("add"))
+                            .on_press(WelcomeMessage::AddAccountToggle)
+                            .class(widget::button::ButtonClass::Suggested),
+                    )
+                    .align_x(Alignment::Center)
+                    .width(Length::Fill),
+            );
+        }
+
+        element.into()
+    }
+
+    pub fn add_accounts_view<'a>(&'a self) -> Element<'a, WelcomeMessage> {
+        let mut element = widget::column().width(Length::Fill);
+
+        element = element.push(Space::with_height(10));
+
+        element = element.push(widget::text::text(fl!("account-name")));
+        element = element.push(Space::with_height(3)).push(
+            cosmic::widget::text_input(fl!("account-name"), &self.form_new_account_name)
+                .on_input(WelcomeMessage::NewAccountNameChanged),
+        );
+
+        element = element.push(Space::with_height(5));
+        element = element.push(widget::text::text(fl!("account-description")));
+        element = element.push(Space::with_height(3)).push(
+            cosmic::widget::text_input(
+                fl!("account-description"),
+                &self.form_new_account_description,
+            )
+            .on_input(WelcomeMessage::NewAccountDescriptionChanged),
+        );
+
+        element = element.push(Space::with_height(5));
+        element = element.push(widget::text::text(fl!("balance")));
+        element = element.push(Space::with_height(3)).push(
+            cosmic::widget::text_input(fl!("balance"), &self.form_new_account_balance)
+                .on_input(WelcomeMessage::NewAccountBalanceChanged),
+        );
+
+        element = element.push(Space::with_height(5));
+
+        element = element
+            .push(
+                widget::row()
+                    .push(
+                        widget::button::text(fl!("add-account"))
+                            .on_press(WelcomeMessage::NewAccountSubmitted)
+                            .class(widget::button::ButtonClass::Suggested),
+                    )
+                    .push(Space::with_width(5))
+                    .push(
+                        widget::button::text(fl!("cancel"))
+                            .on_press(WelcomeMessage::NewAccountCancel)
+                            .class(widget::button::ButtonClass::Destructive),
+                    )
+                    .width(Length::Fill)
+                    .align_y(Alignment::End),
+            )
+            .width(Length::Fill);
+
+        element.into()
+    }
+
     pub fn update(&mut self, message: WelcomeMessage) -> Task<crate::app::Message> {
         let mut commands = vec![];
         match message {
@@ -303,6 +420,45 @@ impl Welcome {
                     self.expense_categories
                         .retain(|c| c.name != delete_category.name);
                 }
+            }
+            WelcomeMessage::AddAccountToggle => {
+                self.add_account_toggled = true;
+            }
+            WelcomeMessage::NewAccountNameChanged(name) => {
+                self.form_new_account_name = name;
+            }
+            WelcomeMessage::NewAccountDescriptionChanged(description) => {
+                self.form_new_account_description = description;
+            }
+            WelcomeMessage::NewAccountBalanceChanged(balance) => {
+                if balance.parse::<f32>().is_ok() || balance == "" {
+                    self.form_new_account_balance = balance;
+                }
+            }
+            WelcomeMessage::NewAccountSubmitted => {
+                let balance = if let Ok(balance) = self.form_new_account_balance.parse::<f32>() {
+                    balance
+                } else {
+                    0.
+                };
+
+                let new_account = NewAccount {
+                    name: self.form_new_account_name.clone(),
+                    initial_balance: balance,
+                    account_description: self.form_new_account_description.clone(),
+                };
+
+                self.accounts.push(new_account);
+                self.add_account_toggled = false;
+            }
+            WelcomeMessage::NewAccountCancel => {
+                self.form_new_account_name = "".to_string();
+                self.form_new_account_description = "".to_string();
+                self.form_new_account_balance = "".to_string();
+                self.add_account_toggled = false;
+            }
+            WelcomeMessage::DeleteAccount(delete_account) => {
+                self.accounts.retain(|a| a.name != delete_account.name);
             }
         }
         Task::batch(commands)

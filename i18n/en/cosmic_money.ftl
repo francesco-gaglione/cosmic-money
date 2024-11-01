@@ -28,6 +28,7 @@ description = Description
 add-account = Add account
 new-account = New account
 account-name = Account name
+account-description = Account description
 bank-account = Bank account
 initial-value = Initial value
 no-elements = No elements in this list
