@@ -11,12 +11,16 @@ pub const CONFIG_VERSION: u64 = 1;
 
 #[derive(Clone, CosmicConfigEntry, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Config {
+    pub is_user_initialized: bool,
     pub currency_id: i32,
 }
 
 impl Default for Config {
     fn default() -> Self {
-        Self { currency_id: 1 }
+        Self {
+            is_user_initialized: false,
+            currency_id: 1,
+        }
     }
 }
 

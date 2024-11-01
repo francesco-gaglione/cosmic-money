@@ -8,6 +8,15 @@ add = Add
 color-scheme-name = placeholder
 save-current-color-scheme = save placeholder
 
+page-welcome = Welcome
+welcome-title-message = Welcome to Cosmic Money!
+welcome-message = Setup your app
+currency-message = Choose your default currency
+welcome-income-categories = Income categories
+welcome-expense-categories = Expense categories
+welcome-initial-accounts = Initial accounts
+setup = Setup
+
 page_accounts = Accounts
 page_categories = Categories
 page_transactions = Transactions

@@ -1,8 +1,6 @@
 use crate::{app, config::Config, fl, models::Currency, STORE};
 use cosmic::{iced::Length, widget, Element, Task};
 
-use super::accounts::AccountsMessage;
-
 #[derive(Debug, Clone)]
 pub enum SettingsMessage {
     CurrencyChanged(usize),

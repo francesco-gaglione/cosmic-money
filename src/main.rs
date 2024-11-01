@@ -9,7 +9,7 @@ use directories::ProjectDirs;
 use dotenvy::dotenv;
 use once_cell::sync::Lazy;
 use store::Store;
-/// The `app` module is used by convention to indicate the main component of our application.
+
 mod app;
 mod config;
 mod core;
@@ -41,8 +41,7 @@ pub fn get_database_url() -> PathBuf {
         .unwrap_or_else(|e| panic!("Error creating data directory: {:?}", e));
 
     if !db_path.exists() {
-        File::create(&db_path)
-            .unwrap_or_else(|e| panic!("Error creating database file: {:?}", e));
+        File::create(&db_path).unwrap_or_else(|e| panic!("Error creating database file: {:?}", e));
         log::info!("Database file created: {:?}", db_path);
     } else {
         log::info!("Database file already exists: {:?}", db_path);

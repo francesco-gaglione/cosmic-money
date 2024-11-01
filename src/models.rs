@@ -54,10 +54,10 @@ impl AsRef<str> for Category {
     }
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug, Clone)]
 #[diesel(table_name = category)]
-pub struct NewCategory<'a> {
-    pub name: &'a str,
+pub struct NewCategory {
+    pub name: String,
     pub is_income: bool,
     pub category_description: String,
 }
