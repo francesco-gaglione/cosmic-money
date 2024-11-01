@@ -1,10 +1,9 @@
 use crate::{app, config::Config, fl, models::Currency, STORE};
 use cosmic::{iced::Length, widget, Element, Task};
 
-use super::accounts::AccountsMessage;
-
 #[derive(Debug, Clone)]
 pub enum SettingsMessage {
+    Update,
     CurrencyChanged(usize),
 }
 
@@ -70,6 +69,20 @@ impl Settings {
                 commands.push(Task::perform(async {}, |_| {
                     app::Message::Transactions(super::transactions::TransactionMessage::UpdatePage)
                 }));
+            }
+            SettingsMessage::Update => {
+                let mut store = STORE.lock().unwrap();
+                let currencies = store.get_currencies().unwrap_or_else(|_| vec![]);
+                let config = Config::load();
+
+                let selected_currency_id = config.1.currency_id;
+
+                let selected_currency = currencies
+                    .iter()
+                    .position(|currency| currency.id == selected_currency_id)
+                    .unwrap_or(0);
+
+                self.selected_currency = Some(selected_currency);
             }
         }
         Task::batch(commands)

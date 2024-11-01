@@ -365,7 +365,7 @@ impl Categories {
             }
             CategoriesMessage::NewCategorySubmitted => {
                 let new_category = NewCategory {
-                    name: self.form_new_category_name.as_str(),
+                    name: self.form_new_category_name.clone(),
                     is_income: self.selected_category_type == Some(0),
                     category_description: self.form_new_category_description.clone(),
                 };

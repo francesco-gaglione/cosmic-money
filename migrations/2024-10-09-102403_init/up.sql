@@ -1,7 +1,6 @@
 CREATE TABLE account (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   name VARCHAR NOT NULL,
-  account_type VARCHAR NOT NULL,
   account_description VARCHAR NOT NULL,
   initial_balance REAL NOT NULL DEFAULT 0
 );
@@ -31,23 +30,7 @@ CREATE TABLE currency (
   symbol VARCHAR(3) NOT NULL
 );
 
-INSERT INTO account (name, account_type, initial_balance, account_description)
-VALUES ('Checking Account', 'Bank', 1000.00, "account description");
-
-
-INSERT INTO category (name, category_description, is_income)
-VALUES ('Groceries', 'Expenses for food and household supplies', FALSE);
-
-INSERT INTO category (name, category_description, is_income)
-VALUES ('Salary', 'Income from employment', TRUE);
-
-INSERT INTO category (name, category_description, is_income)
-VALUES ('Investments', 'Income or expenses related to investments', FALSE);
-
-INSERT INTO category (name, category_description, is_income)
-VALUES ('Entertainment', 'Expenses for leisure activities', FALSE);
-
-INSERT INTO currency (label, symbol) VALUES 
+INSERT INTO currency (label, symbol) VALUES
   ('US Dollar', 'USD'),
   ('Euro', 'EUR'),
   ('Japanese Yen', 'JPY'),

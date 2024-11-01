@@ -9,7 +9,6 @@ use diesel::prelude::*;
 pub struct Account {
     pub id: i32,
     pub name: String,
-    pub account_type: String,
     pub initial_balance: f32,
     pub account_description: String,
 }
@@ -20,20 +19,19 @@ impl AsRef<str> for Account {
     }
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug, Clone)]
 #[diesel(table_name = account)]
-pub struct NewAccount<'a> {
-    pub name: &'a str,
-    pub account_type: &'a str,
+pub struct NewAccount {
+    pub name: String,
     pub initial_balance: f32,
     pub account_description: String,
 }
 
 #[derive(Insertable)]
 #[diesel(table_name = account)]
-pub struct UpdateAccount<'a> {
+pub struct UpdateAccount {
     pub id: i32,
-    pub name: &'a str,
+    pub name: String,
     pub initial_balance: f32,
     pub account_description: String,
 }
@@ -54,10 +52,10 @@ impl AsRef<str> for Category {
     }
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug, Clone)]
 #[diesel(table_name = category)]
-pub struct NewCategory<'a> {
-    pub name: &'a str,
+pub struct NewCategory {
+    pub name: String,
     pub is_income: bool,
     pub category_description: String,
 }

@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 
+use crate::config::Config;
 use crate::core::nav::NavPage;
 use crate::{fl, pages};
 use cosmic::app::{self, Core, Task};
@@ -14,8 +15,6 @@ pub const ORG: &str = "francescogaglione";
 pub const APP: &str = "cosmicmoney";
 pub const APPID: &str = constcat::concat!(QUALIFIER, ".", ORG, ".", APP);
 
-/// This is the struct that represents your application.
-/// It is used to define the data that will be used by your application.
 pub struct MoneyManager {
     /// Application state which is managed by the COSMIC runtime.
     core: Core,
@@ -30,11 +29,9 @@ pub struct MoneyManager {
     pub categories: pages::categories::Categories,
     pub settings: pages::settings::Settings,
     pub transactions: pages::transactions::Transactions,
+    pub welcome: pages::welcome::Welcome,
 }
 
-/// This is the enum that contains all the possible variants that your application will need to transmit messages.
-/// This is used to communicate between the different parts of your application.
-/// If your application does not need to send messages, you can use an empty enum or `()`.
 #[derive(Debug, Clone)]
 pub enum Message {
     LaunchUrl(String),
@@ -44,9 +41,11 @@ pub enum Message {
     Categories(pages::categories::CategoriesMessage),
     Transactions(pages::transactions::TransactionMessage),
     Settings(pages::settings::SettingsMessage),
+    Welcome(pages::welcome::WelcomeMessage),
+
+    GoToAccounts,
 }
 
-/// Identifies a context page to display in the context drawer.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
 pub enum ContextPage {
     #[default]
@@ -76,14 +75,6 @@ impl menu::action::MenuAction for MenuAction {
     }
 }
 
-/// Implement the `Application` trait for your application.
-/// This is where you define the behavior of your application.
-///
-/// The `Application` trait requires you to define the following types and constants:
-/// - `Executor` is the async executor that will be used to run your application's commands.
-/// - `Flags` is the data that your application needs to use before it starts.
-/// - `Message` is the enum that contains all the possible variants that your application will need to transmit messages.
-/// - `APP_ID` is the unique identifier of your application.
 impl Application for MoneyManager {
     type Executor = cosmic::executor::Default;
     type Flags = ();
@@ -98,19 +89,11 @@ impl Application for MoneyManager {
         &mut self.core
     }
 
-    /// Instructs the cosmic runtime to use this model as the nav bar model.
     fn nav_model(&self) -> Option<&nav_bar::Model> {
         Some(&self.nav)
     }
 
-    /// This is the entry point of your application, it is where you initialize your application.
-    ///
-    /// Any work that needs to be done before the application starts should be done here.
-    ///
-    /// - `core` is used to passed on for you by libcosmic to use in the core of your own application.
-    /// - `flags` is used to pass in any data that your application needs to use before it starts.
-    /// - `Command` type is used to send messages to your application. `Command::none()` can be used to send no messages to your application.
-    fn init(core: Core, _flags: Self::Flags) -> (Self, Task<Self::Message>) {
+    fn init(mut core: Core, _flags: Self::Flags) -> (Self, Task<Self::Message>) {
         let mut nav = nav_bar::Model::default();
 
         for &nav_page in NavPage::all() {
@@ -126,6 +109,11 @@ impl Application for MoneyManager {
             }
         }
 
+        let config = Config::load();
+        if !config.1.is_user_initialized {
+            core.nav_bar_set_toggled(false);
+        }
+
         let mut app = MoneyManager {
             core,
             context_page: ContextPage::default(),
@@ -135,6 +123,7 @@ impl Application for MoneyManager {
             categories: pages::categories::Categories::default(),
             settings: pages::settings::Settings::default(),
             transactions: pages::transactions::Transactions::default(),
+            welcome: pages::welcome::Welcome::default(),
         };
 
         let command = app.update_title();
@@ -142,7 +131,6 @@ impl Application for MoneyManager {
         (app, command)
     }
 
-    /// Elements to pack at the start of the header bar.
     fn header_start(&self) -> Vec<Element<Self::Message>> {
         let menu_bar = menu::bar(vec![menu::Tree::with_children(
             menu::root(fl!("view")),
@@ -155,28 +143,24 @@ impl Application for MoneyManager {
         vec![menu_bar.into()]
     }
 
-    /// This is the main view of your application, it is the root of your widget tree.
-    ///
-    /// The `Element` type is used to represent the visual elements of your application,
-    /// it has a `Message` associated with it, which dictates what type of message it can send.
-    ///
-    /// To get a better sense of which widgets are available, check out the `widget` module.
     fn view(&self) -> Element<Self::Message> {
         let spacing = cosmic::theme::active().cosmic().spacing;
         let entity = self.nav.active();
         let nav_page = self.nav.data::<NavPage>(entity).unwrap_or_default();
+        let config = Config::load();
 
-        widget::column::with_children(vec![nav_page.view(self)])
-            .padding(spacing.space_xs)
-            .width(Length::Fill)
-            .height(Length::Fill)
-            .align_x(Alignment::Center)
-            .into()
+        widget::column::with_children(vec![if !config.1.is_user_initialized {
+            self.welcome.view().map(Message::Welcome)
+        } else {
+            nav_page.view(self)
+        }])
+        .padding(spacing.space_xs)
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .align_x(Alignment::Center)
+        .into()
     }
 
-    /// Application messages are handled here. The application state can be modified based on
-    /// what message was received. Commands may be returned for asynchronous execution on a
-    /// background thread managed by the application's executor.
     fn update(
         &mut self,
         message: Self::Message,
@@ -215,11 +199,21 @@ impl Application for MoneyManager {
                     .update(message)
                     .map(cosmic::app::Message::App),
             ),
+            Message::Welcome(welcome_message) => {
+                commands.push(
+                    self.welcome
+                        .update(welcome_message)
+                        .map(cosmic::app::Message::App),
+                );
+            }
+            Message::GoToAccounts => {
+                self.nav.activate_position(0);
+                self.core.nav_bar_set_toggled(true);
+            }
         }
         Task::batch(commands)
     }
 
-    /// Display a context drawer if the context page is requested.
     fn context_drawer(&self) -> Option<Element<Self::Message>> {
         if !self.core.window.show_context {
             return None;
@@ -230,7 +224,6 @@ impl Application for MoneyManager {
         })
     }
 
-    /// Called when a nav item is selected.
     fn on_nav_select(&mut self, id: nav_bar::Id) -> Task<Self::Message> {
         // Activate the page in the model.
         self.nav.activate(id);
@@ -240,7 +233,6 @@ impl Application for MoneyManager {
 }
 
 impl MoneyManager {
-    /// The about page for this app.
     pub fn about(&self) -> Element<Message> {
         let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
 
@@ -267,7 +259,6 @@ impl MoneyManager {
             .into()
     }
 
-    /// Updates the header and window titles.
     pub fn update_title(&mut self) -> Task<Message> {
         let mut window_title = fl!("app-title");
 

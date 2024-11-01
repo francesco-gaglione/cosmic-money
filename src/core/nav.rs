@@ -9,6 +9,7 @@ pub enum NavPage {
     Categories,
     Transactions,
     Settings,
+    Welcome,
 }
 
 impl Default for &NavPage {
@@ -24,6 +25,7 @@ impl NavPage {
             Self::Categories => fl!("page_categories"),
             Self::Transactions => fl!("page_transactions"),
             Self::Settings => fl!("page_settings"),
+            Self::Welcome => fl!("page-welcome"),
         }
     }
 
@@ -33,6 +35,7 @@ impl NavPage {
             NavPage::Categories => icon::from_name("sidebar-places-symbolic").into(),
             NavPage::Transactions => icon::from_name("network-transmit-receive-symbolic").into(),
             NavPage::Settings => icon::from_name("application-default-symbolic").into(),
+            NavPage::Welcome => icon::from_name("application-default-symbolic").into(), //TODO here the icon is useless
         }
     }
 
@@ -42,6 +45,7 @@ impl NavPage {
             NavPage::Categories => app.categories.view().map(app::Message::Categories),
             NavPage::Transactions => app.transactions.view().map(app::Message::Transactions),
             NavPage::Settings => app.settings.view().map(app::Message::Settings),
+            NavPage::Welcome => app.welcome.view().map(app::Message::Welcome),
         }
     }
 
