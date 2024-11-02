@@ -1,4 +1,4 @@
-use crate::{app, config::Config, fl, models::Currency, STORE};
+use crate::{app, config::Config, fl, models::Currency, synchronization::model::SyncModel, STORE};
 use cosmic::{
     iced::Length,
     widget::{self, Space},
@@ -58,6 +58,7 @@ impl Settings {
             .push(Space::with_height(20))
             .push(widget::text::title4(fl!("import-export")))
             .push(widget::text::text(fl!("import-export-desc")))
+            //TODO create a progress spinner to track exporting process
             .push(Space::with_height(5))
             .push(
                 widget::row()
@@ -116,7 +117,39 @@ impl Settings {
             }
             SettingsMessage::Import => todo!(),
             SettingsMessage::Export => {
+                commands.push(cosmic::command::future(async move {
+                    log::info!("opening new dialog");
+                    
+                    let dialog =
+                        file_chooser::open::Dialog::new().title("Choose a destination folder");
+
+                    match dialog.open_file().await {
+                        Ok(response) => {
+                            //InstallFromFileMessage::FileSelected(response.url().to_owned())
+
+                            app::Message::ChooseFile(response.url().clone())
+                        }
+
+                        Err(file_chooser::Error::Cancelled) => app::Message::Cancelled,
+
+                        Err(why) => app::Message::OpenError(Arc::new(why)),
+                    }
+                }));
+
                 log::info!("Exporting data");
+                let mut store = STORE.lock().unwrap();
+                let accounts = store.get_accounts();
+                let categories = store.get_categories();
+                let transactions = store.get_money_transactions();
+
+                let sync_model = SyncModel {
+                    accounts: accounts.unwrap_or(vec![]),
+                    categories: categories.unwrap_or(vec![]),
+                    transactions: transactions.unwrap_or(vec![]),
+                    currency: "".to_string(),
+                };
+
+                log::debug!("exporting data: {:?}", sync_model);
             }
         }
         Task::batch(commands)

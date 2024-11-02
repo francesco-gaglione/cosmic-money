@@ -2,8 +2,10 @@ use crate::schema::account;
 use crate::schema::category;
 use crate::schema::money_transaction;
 use diesel::prelude::*;
+use serde::Deserialize;
+use serde::Serialize;
 
-#[derive(Queryable, Selectable, Clone)]
+#[derive(Queryable, Selectable, Debug, Clone, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::account)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Account {
@@ -36,7 +38,7 @@ pub struct UpdateAccount {
     pub account_description: String,
 }
 
-#[derive(Queryable, Selectable, Debug, Clone)]
+#[derive(Queryable, Selectable, Debug, Clone, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::category)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Category {
@@ -69,7 +71,7 @@ pub struct UpdateCategory<'a> {
     pub category_description: String,
 }
 
-#[derive(Queryable, Selectable, Debug)]
+#[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::money_transaction)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct MoneyTransaction {
