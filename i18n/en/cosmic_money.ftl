@@ -66,3 +66,7 @@ month-11 = November
 month-12 = December
 
 currency = Currency
+import-export = Import/Export data
+import-export-desc = Here you can import or export your data.
+import = Import
+export = Export
