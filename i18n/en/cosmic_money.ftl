@@ -70,3 +70,5 @@ import-export = Import/Export data
 import-export-desc = Here you can import or export your data.
 import = Import
 export = Export
+export-completed = Export to file completed
+export-error = Error happened during file export

@@ -6,8 +6,9 @@ use crate::config::Config;
 use crate::core::nav::NavPage;
 use crate::{fl, pages};
 use cosmic::app::{self, Core, Task};
+use cosmic::dialog::ashpd::url::Url;
 use cosmic::iced::{Alignment, Length};
-use cosmic::widget::{self, menu, nav_bar};
+use cosmic::widget::{self, menu, nav_bar, ToastId};
 use cosmic::{cosmic_theme, theme, Application, ApplicationExt, Element};
 
 pub const QUALIFIER: &str = "com";
@@ -30,6 +31,7 @@ pub struct MoneyManager {
     pub settings: pages::settings::Settings,
     pub transactions: pages::transactions::Transactions,
     pub welcome: pages::welcome::Welcome,
+    pub toasts: widget::toaster::Toasts<Message>,
 }
 
 #[derive(Debug, Clone)]
@@ -44,6 +46,9 @@ pub enum Message {
     Welcome(pages::welcome::WelcomeMessage),
 
     GoToAccounts,
+    ExportDirectoryChosen(Url),
+    ShowToast(String),
+    CloseToast(ToastId),
 }
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
@@ -124,6 +129,7 @@ impl Application for MoneyManager {
             settings: pages::settings::Settings::default(),
             transactions: pages::transactions::Transactions::default(),
             welcome: pages::welcome::Welcome::default(),
+            toasts: widget::toaster::Toasts::new(Message::CloseToast),
         };
 
         let command = app.update_title();
@@ -154,6 +160,7 @@ impl Application for MoneyManager {
         } else {
             nav_page.view(self)
         }])
+        .push(widget::toaster(&self.toasts, widget::horizontal_space()))
         .padding(spacing.space_xs)
         .width(Length::Fill)
         .height(Length::Fill)
@@ -209,6 +216,24 @@ impl Application for MoneyManager {
             Message::GoToAccounts => {
                 self.nav.activate_position(0);
                 self.core.nav_bar_set_toggled(true);
+            }
+            Message::ExportDirectoryChosen(url) => {
+                log::info!("Export directory: {:?}", url);
+                commands.push(
+                    self.settings
+                        .update(pages::settings::SettingsMessage::ExportToFolder(url))
+                        .map(cosmic::app::Message::App),
+                )
+            }
+            Message::ShowToast(message) => {
+                commands.push(
+                    self.toasts
+                        .push(widget::toaster::Toast::new(message))
+                        .map(cosmic::app::Message::App),
+                );
+            }
+            Message::CloseToast(id) => {
+                self.toasts.remove(id);
             }
         }
         Task::batch(commands)

@@ -25,6 +25,7 @@ chrono = { version = "0.4", features = ["serde"] }
 dotenvy = "0.15"
 thiserror = "1.0.64"
 serde = { version = "1", features = ["serde_derive"] }
+serde_json = "1.0.132"
 diesel_migrations = "2.2.0"
 directories = "5.0.1"
 constcat = "0.5"
@@ -49,6 +50,7 @@ features = [
     "wayland",
     # GPU-accelerated rendering
     "wgpu",
+    "xdg-portal",
 ]
 
 [dependencies.i18n-embed]

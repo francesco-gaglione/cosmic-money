@@ -1,5 +1,8 @@
+use std::{fs::File, io::Write};
+
 use crate::{app, config::Config, fl, models::Currency, synchronization::model::SyncModel, STORE};
 use cosmic::{
+    dialog::{ashpd::url::Url, file_chooser},
     iced::Length,
     widget::{self, Space},
     Element, Task,
@@ -11,6 +14,7 @@ pub enum SettingsMessage {
     CurrencyChanged(usize),
     Import,
     Export,
+    ExportToFolder(Url),
 }
 
 pub struct Settings {
@@ -118,38 +122,75 @@ impl Settings {
             SettingsMessage::Import => todo!(),
             SettingsMessage::Export => {
                 commands.push(cosmic::command::future(async move {
-                    log::info!("opening new dialog");
-                    
                     let dialog =
                         file_chooser::open::Dialog::new().title("Choose a destination folder");
-
-                    match dialog.open_file().await {
-                        Ok(response) => {
-                            //InstallFromFileMessage::FileSelected(response.url().to_owned())
-
-                            app::Message::ChooseFile(response.url().clone())
+                    match dialog.open_folder().await {
+                        Ok(selected_folder) => {
+                            app::Message::ExportDirectoryChosen(selected_folder.url().clone())
                         }
-
-                        Err(file_chooser::Error::Cancelled) => app::Message::Cancelled,
-
-                        Err(why) => app::Message::OpenError(Arc::new(why)),
+                        Err(file_chooser::Error::Cancelled) => {
+                            app::Message::ShowToast("".to_string())
+                        }
+                        Err(_why) => app::Message::ShowToast("".to_string()),
                     }
                 }));
-
+            }
+            SettingsMessage::ExportToFolder(url) => {
                 log::info!("Exporting data");
                 let mut store = STORE.lock().unwrap();
+                let config = Config::load();
                 let accounts = store.get_accounts();
                 let categories = store.get_categories();
                 let transactions = store.get_money_transactions();
+                let currencies = store.get_currencies();
+
+                let currency = if let Ok(currencies) = currencies {
+                    match currencies.iter().find(|c| c.id == config.1.currency_id) {
+                        Some(currency) => currency.symbol.clone(),
+                        None => "USD".to_string(),
+                    }
+                } else {
+                    "USD".to_string()
+                };
 
                 let sync_model = SyncModel {
                     accounts: accounts.unwrap_or(vec![]),
                     categories: categories.unwrap_or(vec![]),
                     transactions: transactions.unwrap_or(vec![]),
-                    currency: "".to_string(),
+                    currency,
                 };
 
-                log::debug!("exporting data: {:?}", sync_model);
+                match serde_json::to_string(&sync_model) {
+                    Ok(serialized) => {
+                        if let Ok(path) = url.to_file_path() {
+                            let target = path.join("exported.json");
+                            match File::create(&target)
+                                .and_then(|mut file| file.write_all(serialized.as_bytes()))
+                            {
+                                Ok(_) => {
+                                    log::info!("file exported");
+                                    commands.push(Task::perform(async {}, |_| {
+                                        app::Message::ShowToast(fl!("export-completed"))
+                                    }));
+                                }
+                                Err(_) => {
+                                    commands.push(Task::perform(async {}, |_| {
+                                        app::Message::ShowToast(fl!("export-error"))
+                                    }));
+                                }
+                            }
+                        } else {
+                            commands.push(Task::perform(async {}, |_| {
+                                app::Message::ShowToast(fl!("export-error"))
+                            }));
+                        }
+                    }
+                    Err(_) => {
+                        commands.push(Task::perform(async {}, |_| {
+                            app::Message::ShowToast(fl!("export-error"))
+                        }));
+                    }
+                }
             }
         }
         Task::batch(commands)
