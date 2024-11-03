@@ -43,7 +43,10 @@ impl Store {
         Ok(())
     }
 
-    pub fn create_accounts(&mut self, new_accounts: &[NewAccount]) -> Result<(), DataStoreError> {
+    pub fn create_accounts(
+        &mut self,
+        new_accounts: &Vec<NewAccount>,
+    ) -> Result<(), DataStoreError> {
         self.connection
             .transaction::<_, DieselError, _>(|conn| {
                 for new_account in new_accounts {
@@ -164,7 +167,7 @@ impl Store {
 
     pub fn create_categories(
         &mut self,
-        new_categories: &[NewCategory],
+        new_categories: &Vec<NewCategory>,
     ) -> Result<(), DataStoreError> {
         self.connection
             .transaction::<_, DieselError, _>(|conn| {
@@ -219,6 +222,21 @@ impl Store {
             .values(new_money_transaction)
             .returning(MoneyTransaction::as_returning())
             .get_result(&mut self.connection);
+
+        if let Err(e) = res {
+            return Err(DataStoreError::InsertError(e.to_string()));
+        }
+
+        Ok(())
+    }
+
+    pub fn create_money_transactions(
+        &mut self,
+        new_money_transactions: &Vec<NewMoneyTransaction>,
+    ) -> Result<(), DataStoreError> {
+        let res = diesel::insert_into(money_transaction::table)
+            .values(new_money_transactions)
+            .execute(&mut self.connection);
 
         if let Err(e) = res {
             return Err(DataStoreError::InsertError(e.to_string()));

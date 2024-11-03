@@ -72,3 +72,6 @@ import = Import
 export = Export
 export-completed = Export to file completed
 export-error = Error happened during file export
+import-error = Error happened during file import
+import-success = Import from file completed
+operation-cancelled = Operation cancelled

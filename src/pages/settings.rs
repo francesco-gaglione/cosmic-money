@@ -1,8 +1,21 @@
-use std::{fs::File, io::Write};
+use std::{
+    fs::File,
+    io::{BufReader, Write},
+};
 
-use crate::{app, config::Config, fl, models::Currency, synchronization::model::SyncModel, STORE};
+use crate::{
+    app,
+    config::Config,
+    fl,
+    models::Currency,
+    synchronization::{import::import_from_json, model::SyncModel},
+    STORE,
+};
 use cosmic::{
-    dialog::{ashpd::url::Url, file_chooser},
+    dialog::{
+        ashpd::url::Url,
+        file_chooser::{self, FileFilter},
+    },
     iced::Length,
     widget::{self, Space},
     Element, Task,
@@ -13,6 +26,7 @@ pub enum SettingsMessage {
     Update,
     CurrencyChanged(usize),
     Import,
+    ImportFromJsonFile(Url),
     Export,
     ExportToFolder(Url),
 }
@@ -119,7 +133,38 @@ impl Settings {
 
                 self.selected_currency = Some(selected_currency);
             }
-            SettingsMessage::Import => todo!(),
+            SettingsMessage::Import => {
+                commands.push(cosmic::command::future(async move {
+                    let filter = FileFilter::new("json files").glob("*.json");
+                    let dialog = file_chooser::open::Dialog::new()
+                        .title("Choose a data file")
+                        .filter(filter);
+                    match dialog.open_file().await {
+                        Ok(selected_file) => {
+                            app::Message::ImportFromFile(selected_file.url().clone())
+                        }
+                        Err(file_chooser::Error::Cancelled) => {
+                            app::Message::ShowToast(fl!("operation-cancelled"))
+                        }
+                        Err(_why) => app::Message::ShowToast(fl!("operation-cancelled")),
+                    }
+                }));
+            }
+            SettingsMessage::ImportFromJsonFile(url) => {
+                log::info!("Import from {:?}", url);
+                match import_from_json(&url) {
+                    Ok(_) => {
+                        commands.push(Task::perform(async {}, |_| {
+                            app::Message::ShowToast(fl!("import-success"))
+                        }));
+                    }
+                    Err(_) => {
+                        commands.push(Task::perform(async {}, |_| {
+                            app::Message::ShowToast(fl!("import-error"))
+                        }));
+                    }
+                }
+            }
             SettingsMessage::Export => {
                 commands.push(cosmic::command::future(async move {
                     let dialog =
@@ -129,9 +174,9 @@ impl Settings {
                             app::Message::ExportDirectoryChosen(selected_folder.url().clone())
                         }
                         Err(file_chooser::Error::Cancelled) => {
-                            app::Message::ShowToast("".to_string())
+                            app::Message::ShowToast(fl!("operation-cancelled"))
                         }
-                        Err(_why) => app::Message::ShowToast("".to_string()),
+                        Err(_why) => app::Message::ShowToast(fl!("operation-cancelled")),
                     }
                 }));
             }

@@ -47,6 +47,7 @@ pub enum Message {
 
     GoToAccounts,
     ExportDirectoryChosen(Url),
+    ImportFromFile(Url),
     ShowToast(String),
     CloseToast(ToastId),
 }
@@ -225,6 +226,11 @@ impl Application for MoneyManager {
                         .map(cosmic::app::Message::App),
                 )
             }
+            Message::ImportFromFile(url) => commands.push(
+                self.settings
+                    .update(pages::settings::SettingsMessage::ImportFromJsonFile(url))
+                    .map(cosmic::app::Message::App),
+            ),
             Message::ShowToast(message) => {
                 commands.push(
                     self.toasts
