@@ -1,14 +1,9 @@
-use std::{
-    fs::File,
-    io::{BufReader, Write},
-};
-
 use crate::{
     app,
     config::Config,
     fl,
     models::Currency,
-    synchronization::{export::export_to_folder, import::import_from_json, model::SyncModel},
+    synchronization::{export::export_to_folder, import::import_from_json},
     STORE,
 };
 use cosmic::{
@@ -16,7 +11,7 @@ use cosmic::{
         ashpd::url::Url,
         file_chooser::{self, FileFilter},
     },
-    iced::Length,
+    iced::{Length, Padding},
     widget::{self, Space},
     Element, Task,
 };
@@ -34,6 +29,8 @@ pub enum SettingsMessage {
 pub struct Settings {
     currency_list: Vec<Currency>,
     selected_currency: Option<usize>,
+    synchronization_progress: f32,
+    synchronization_in_progress: bool,
 }
 
 impl Default for Settings {
@@ -52,6 +49,8 @@ impl Default for Settings {
         Self {
             currency_list: currencies,
             selected_currency: Some(selected_currency),
+            synchronization_progress: 0.,
+            synchronization_in_progress: false,
         }
     }
 }
@@ -76,7 +75,17 @@ impl Settings {
             .push(Space::with_height(20))
             .push(widget::text::title4(fl!("import-export")))
             .push(widget::text::text(fl!("import-export-desc")))
-            //TODO create a progress spinner to track exporting process
+            .push_maybe(match self.synchronization_in_progress {
+                true => Some(
+                    widget::container(
+                        widget::progress_bar(0.0..=100.0, self.synchronization_progress)
+                            .height(Length::from(5)),
+                    )
+                    .width(Length::Fill)
+                    .padding(Padding::new(5.).vertical()),
+                ),
+                false => None,
+            })
             .push(Space::with_height(5))
             .push(
                 widget::row()
@@ -134,6 +143,7 @@ impl Settings {
                 self.selected_currency = Some(selected_currency);
             }
             SettingsMessage::Import => {
+                self.synchronization_in_progress = true;
                 commands.push(cosmic::command::future(async move {
                     let filter = FileFilter::new("json files").glob("*.json");
                     let dialog = file_chooser::open::Dialog::new()
@@ -152,7 +162,7 @@ impl Settings {
             }
             SettingsMessage::ImportFromJsonFile(url) => {
                 log::info!("Import from {:?}", url);
-                match import_from_json(&url) {
+                match import_from_json(&url, &mut self.synchronization_progress) {
                     Ok(_) => {
                         commands.push(Task::perform(async {}, |_| {
                             app::Message::ShowToast(fl!("import-success"))
@@ -164,9 +174,11 @@ impl Settings {
                         }));
                     }
                 }
+                self.synchronization_in_progress = false;
                 commands.push(Task::perform(async {}, |_| app::Message::UpdateAllPages));
             }
             SettingsMessage::Export => {
+                self.synchronization_in_progress = true;
                 commands.push(cosmic::command::future(async move {
                     let dialog =
                         file_chooser::open::Dialog::new().title("Choose a destination folder");
@@ -183,7 +195,7 @@ impl Settings {
             }
             SettingsMessage::ExportToFolder(url) => {
                 log::info!("Exporting data...");
-                match export_to_folder(url) {
+                match export_to_folder(url, &mut self.synchronization_progress) {
                     Ok(_) => {
                         commands.push(Task::perform(async {}, |_| {
                             app::Message::ShowToast(fl!("export-completed"))
@@ -195,6 +207,7 @@ impl Settings {
                         }));
                     }
                 }
+                self.synchronization_in_progress = false;
             }
         }
         Task::batch(commands)

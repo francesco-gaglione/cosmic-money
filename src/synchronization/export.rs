@@ -6,13 +6,15 @@ use crate::{config::Config, STORE};
 
 use super::model::SyncModel;
 
-pub fn export_to_folder(url: Url) -> Result<(), String> {
+pub fn export_to_folder(url: Url, progress: &mut f32) -> Result<(), String> {
     let mut store = STORE.lock().unwrap();
     let config = Config::load();
     let accounts = store.get_accounts();
     let categories = store.get_categories();
     let transactions = store.get_money_transactions();
     let currencies = store.get_currencies();
+
+    *progress = 25.;
 
     let currency = if let Ok(currencies) = currencies {
         match currencies.iter().find(|c| c.id == config.1.currency_id) {
@@ -23,12 +25,16 @@ pub fn export_to_folder(url: Url) -> Result<(), String> {
         "USD".to_string()
     };
 
+    *progress = 50.;
+
     let sync_model = SyncModel {
         accounts: accounts.unwrap_or(vec![]),
         categories: categories.unwrap_or(vec![]),
         transactions: transactions.unwrap_or(vec![]),
         currency,
     };
+
+    *progress = 75.;
 
     match serde_json::to_string(&sync_model) {
         Ok(serialized) => {
@@ -39,6 +45,7 @@ pub fn export_to_folder(url: Url) -> Result<(), String> {
                 {
                     Ok(_) => {
                         log::info!("file exported");
+                        *progress = 100.;
                         Ok(())
                     }
                     Err(_) => Err("Failed to create file".to_string()),
