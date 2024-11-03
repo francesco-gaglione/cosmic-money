@@ -164,6 +164,7 @@ impl Settings {
                         }));
                     }
                 }
+                commands.push(Task::perform(async {}, |_| app::Message::UpdateAllPages));
             }
             SettingsMessage::Export => {
                 commands.push(cosmic::command::future(async move {

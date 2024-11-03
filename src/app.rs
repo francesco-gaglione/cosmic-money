@@ -50,6 +50,7 @@ pub enum Message {
     ImportFromFile(Url),
     ShowToast(String),
     CloseToast(ToastId),
+    UpdateAllPages,
 }
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
@@ -240,6 +241,28 @@ impl Application for MoneyManager {
             }
             Message::CloseToast(id) => {
                 self.toasts.remove(id);
+            }
+            Message::UpdateAllPages => {
+                commands.push(
+                    self.accounts
+                        .update(pages::accounts::AccountsMessage::Update)
+                        .map(cosmic::app::Message::App),
+                );
+                commands.push(
+                    self.categories
+                        .update(pages::categories::CategoriesMessage::Update)
+                        .map(cosmic::app::Message::App),
+                );
+                commands.push(
+                    self.settings
+                        .update(pages::settings::SettingsMessage::Update)
+                        .map(cosmic::app::Message::App),
+                );
+                commands.push(
+                    self.transactions
+                        .update(pages::transactions::TransactionMessage::UpdatePage)
+                        .map(cosmic::app::Message::App),
+                );
             }
         }
         Task::batch(commands)
