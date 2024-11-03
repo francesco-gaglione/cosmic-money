@@ -34,6 +34,8 @@ pub fn import_from_json(url: &Url, progress: &mut f32) -> Result<(), String> {
             let mut store = STORE.lock().unwrap();
             log::info!("STORE lock acquired.");
 
+            let _ = store.drop_all();
+
             let _ = store.create_accounts(
                 &deserialized
                     .accounts
