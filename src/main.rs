@@ -3,6 +3,7 @@
 use std::{path::PathBuf, sync::Mutex};
 
 use app::MoneyManager;
+use cosmic::iced::Size;
 use diesel::{Connection, SqliteConnection};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use directories::ProjectDirs;
@@ -18,8 +19,8 @@ mod models;
 mod pages;
 mod schema;
 mod store;
-mod widget;
 mod synchronization;
+mod widget;
 
 static STORE: Lazy<Mutex<Store>> = Lazy::new(|| Mutex::new(Store::default()));
 static DATABASE_URL: &str = "cosmic-money.db";
@@ -76,6 +77,6 @@ fn main() -> cosmic::iced::Result {
     let applied = connection.applied_migrations();
     log::info!("Migration completed, applied: {:?}", applied);
 
-    let settings = cosmic::app::Settings::default();
+    let settings = cosmic::app::Settings::default().size(Size::new(1200., 1000.));
     cosmic::app::run::<MoneyManager>(settings, ())
 }

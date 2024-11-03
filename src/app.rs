@@ -4,12 +4,16 @@ use std::collections::HashMap;
 
 use crate::config::Config;
 use crate::core::nav::NavPage;
+use crate::synchronization::export::export_to_folder;
+use crate::synchronization::import::import_from_json;
 use crate::{fl, pages};
 use cosmic::app::{self, Core, Task};
 use cosmic::dialog::ashpd::url::Url;
+use cosmic::dialog::file_chooser::{self, FileFilter};
 use cosmic::iced::{Alignment, Length};
 use cosmic::widget::{self, menu, nav_bar, ToastId};
 use cosmic::{cosmic_theme, theme, Application, ApplicationExt, Element};
+use futures_util::FutureExt;
 
 pub const QUALIFIER: &str = "com";
 pub const ORG: &str = "francescogaglione";
@@ -31,11 +35,11 @@ pub struct MoneyManager {
     pub settings: pages::settings::Settings,
     pub transactions: pages::transactions::Transactions,
     pub welcome: pages::welcome::Welcome,
-    pub toasts: widget::toaster::Toasts<Message>,
+    pub toasts: widget::toaster::Toasts<AppMessage>,
 }
 
 #[derive(Debug, Clone)]
-pub enum Message {
+pub enum AppMessage {
     LaunchUrl(String),
     ToggleContextPage(ContextPage),
 
@@ -46,11 +50,14 @@ pub enum Message {
     Welcome(pages::welcome::WelcomeMessage),
 
     GoToAccounts,
-    ExportDirectoryChosen(Url),
-    ImportFromFile(Url),
     ShowToast(String),
     CloseToast(ToastId),
     UpdateAllPages,
+
+    Import,
+    Export,
+    ImportFromJsonFile(Url),
+    ExportToFolder(Url),
 }
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
@@ -73,11 +80,11 @@ pub enum MenuAction {
 }
 
 impl menu::action::MenuAction for MenuAction {
-    type Message = Message;
+    type Message = AppMessage;
 
     fn message(&self) -> Self::Message {
         match self {
-            MenuAction::About => Message::ToggleContextPage(ContextPage::About),
+            MenuAction::About => AppMessage::ToggleContextPage(ContextPage::About),
         }
     }
 }
@@ -85,7 +92,7 @@ impl menu::action::MenuAction for MenuAction {
 impl Application for MoneyManager {
     type Executor = cosmic::executor::Default;
     type Flags = ();
-    type Message = Message;
+    type Message = AppMessage;
     const APP_ID: &'static str = "com.francescogaglione.cosmicmoney";
 
     fn core(&self) -> &Core {
@@ -131,7 +138,7 @@ impl Application for MoneyManager {
             settings: pages::settings::Settings::default(),
             transactions: pages::transactions::Transactions::default(),
             welcome: pages::welcome::Welcome::default(),
-            toasts: widget::toaster::Toasts::new(Message::CloseToast),
+            toasts: widget::toaster::Toasts::new(AppMessage::CloseToast),
         };
 
         let command = app.update_title();
@@ -158,7 +165,7 @@ impl Application for MoneyManager {
         let config = Config::load();
 
         widget::column::with_children(vec![if !config.1.is_user_initialized {
-            self.welcome.view().map(Message::Welcome)
+            self.welcome.view().map(AppMessage::Welcome)
         } else {
             nav_page.view(self)
         }])
@@ -176,10 +183,10 @@ impl Application for MoneyManager {
     ) -> cosmic::iced::Task<app::Message<Self::Message>> {
         let mut commands = vec![];
         match message {
-            Message::LaunchUrl(url) => {
+            AppMessage::LaunchUrl(url) => {
                 let _result = open::that_detached(url);
             }
-            Message::ToggleContextPage(context_page) => {
+            AppMessage::ToggleContextPage(context_page) => {
                 if self.context_page == context_page {
                     // Close the context drawer if the toggled context page is the same.
                     self.core.window.show_context = !self.core.window.show_context;
@@ -192,57 +199,44 @@ impl Application for MoneyManager {
                 // Set the title of the context drawer.
                 self.set_context_title(context_page.title());
             }
-            Message::Accounts(message) => {
+            AppMessage::Accounts(message) => {
                 commands.push(self.accounts.update(message).map(cosmic::app::Message::App))
             }
-            Message::Settings(message) => {
+            AppMessage::Settings(message) => {
                 commands.push(self.settings.update(message).map(cosmic::app::Message::App))
             }
-            Message::Categories(message) => commands.push(
+            AppMessage::Categories(message) => commands.push(
                 self.categories
                     .update(message)
                     .map(cosmic::app::Message::App),
             ),
-            Message::Transactions(message) => commands.push(
+            AppMessage::Transactions(message) => commands.push(
                 self.transactions
                     .update(message)
                     .map(cosmic::app::Message::App),
             ),
-            Message::Welcome(welcome_message) => {
+            AppMessage::Welcome(welcome_message) => {
                 commands.push(
                     self.welcome
                         .update(welcome_message)
                         .map(cosmic::app::Message::App),
                 );
             }
-            Message::GoToAccounts => {
+            AppMessage::GoToAccounts => {
                 self.nav.activate_position(0);
                 self.core.nav_bar_set_toggled(true);
             }
-            Message::ExportDirectoryChosen(url) => {
-                log::info!("Export directory: {:?}", url);
-                commands.push(
-                    self.settings
-                        .update(pages::settings::SettingsMessage::ExportToFolder(url))
-                        .map(cosmic::app::Message::App),
-                )
-            }
-            Message::ImportFromFile(url) => commands.push(
-                self.settings
-                    .update(pages::settings::SettingsMessage::ImportFromJsonFile(url))
-                    .map(cosmic::app::Message::App),
-            ),
-            Message::ShowToast(message) => {
+            AppMessage::ShowToast(message) => {
                 commands.push(
                     self.toasts
                         .push(widget::toaster::Toast::new(message))
                         .map(cosmic::app::Message::App),
                 );
             }
-            Message::CloseToast(id) => {
+            AppMessage::CloseToast(id) => {
                 self.toasts.remove(id);
             }
-            Message::UpdateAllPages => {
+            AppMessage::UpdateAllPages => {
                 commands.push(
                     self.accounts
                         .update(pages::accounts::AccountsMessage::Update)
@@ -263,6 +257,80 @@ impl Application for MoneyManager {
                         .update(pages::transactions::TransactionMessage::UpdatePage)
                         .map(cosmic::app::Message::App),
                 );
+            }
+            AppMessage::Import => {
+                commands.push(cosmic::command::future(
+                    async move {
+                        let filter = FileFilter::new("json files").glob("*.json");
+                        let dialog = file_chooser::open::Dialog::new()
+                            .title("Choose a data file")
+                            .filter(filter);
+                        match dialog.open_file().await {
+                            Ok(selected_file) => {
+                                AppMessage::ImportFromJsonFile(selected_file.url().clone())
+                            }
+                            Err(file_chooser::Error::Cancelled) => {
+                                AppMessage::ShowToast(fl!("operation-cancelled"))
+                            }
+                            Err(_why) => AppMessage::ShowToast(fl!("operation-cancelled")),
+                        }
+                    }
+                    .map(cosmic::app::Message::App),
+                ));
+            }
+            AppMessage::ImportFromJsonFile(url) => {
+                match import_from_json(&url) {
+                    Ok(_) => {
+                        commands.push(Task::perform(async {}, |_| {
+                            cosmic::app::Message::App(AppMessage::ShowToast(fl!("import-success")))
+                        }));
+                    }
+                    Err(_) => {
+                        commands.push(Task::perform(async {}, |_| {
+                            cosmic::app::Message::App(AppMessage::ShowToast(fl!("import-error")))
+                        }));
+                    }
+                }
+                commands.push(
+                    self.welcome
+                        .update(pages::welcome::WelcomeMessage::ImportCompleted)
+                        .map(cosmic::app::Message::App),
+                );
+                commands.push(Task::perform(async {}, |_| {
+                    cosmic::app::Message::App(AppMessage::UpdateAllPages)
+                }));
+            }
+            AppMessage::Export => {
+                commands.push(cosmic::command::future(async move {
+                    let dialog =
+                        file_chooser::open::Dialog::new().title("Choose a destination folder");
+                    match dialog.open_folder().await {
+                        Ok(selected_folder) => {
+                            AppMessage::ExportToFolder(selected_folder.url().clone())
+                        }
+                        Err(file_chooser::Error::Cancelled) => {
+                            AppMessage::ShowToast(fl!("operation-cancelled"))
+                        }
+                        Err(_why) => AppMessage::ShowToast(fl!("operation-cancelled")),
+                    }
+                }));
+            }
+            AppMessage::ExportToFolder(url) => {
+                log::info!("Exporting data...");
+                match export_to_folder(url) {
+                    Ok(_) => {
+                        commands.push(Task::perform(async {}, |_| {
+                            cosmic::app::Message::App(AppMessage::ShowToast(fl!(
+                                "export-completed"
+                            )))
+                        }));
+                    }
+                    Err(_) => {
+                        commands.push(Task::perform(async {}, |_| {
+                            cosmic::app::Message::App(AppMessage::ShowToast(fl!("export-error")))
+                        }));
+                    }
+                }
             }
         }
         Task::batch(commands)
@@ -287,7 +355,7 @@ impl Application for MoneyManager {
 }
 
 impl MoneyManager {
-    pub fn about(&self) -> Element<Message> {
+    pub fn about(&self) -> Element<AppMessage> {
         let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
 
         let icon = widget::svg(widget::svg::Handle::from_memory(
@@ -299,7 +367,7 @@ impl MoneyManager {
         let title = widget::text::title3(fl!("app-title"));
 
         let link = widget::button::link("Home")
-            .on_press(Message::LaunchUrl(
+            .on_press(AppMessage::LaunchUrl(
                 "https://github.com/francesco-gaglione/cosmic-money".to_string(),
             ))
             .padding(0);
@@ -313,7 +381,7 @@ impl MoneyManager {
             .into()
     }
 
-    pub fn update_title(&mut self) -> Task<Message> {
+    pub fn update_title(&mut self) -> Task<AppMessage> {
         let mut window_title = fl!("app-title");
 
         if let Some(page) = self.nav.text(self.nav.active()) {

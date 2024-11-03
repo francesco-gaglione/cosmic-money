@@ -10,7 +10,7 @@ use crate::{
 
 use super::model::SyncModel;
 
-pub fn import_from_json(url: &Url, progress: &mut f32) -> Result<(), String> {
+pub fn import_from_json(url: &Url) -> Result<(), String> {
     log::info!("Starting import from JSON at URL: {:?}", url);
 
     match File::open(url.to_file_path().unwrap()) {
@@ -25,8 +25,6 @@ pub fn import_from_json(url: &Url, progress: &mut f32) -> Result<(), String> {
                 log::warn!("Failed to deserialize JSON, using default SyncModel.");
                 SyncModel::default()
             };
-
-            *progress = 20.;
 
             let mut config = Config::load();
             log::info!("Config loaded successfully.");
@@ -44,7 +42,6 @@ pub fn import_from_json(url: &Url, progress: &mut f32) -> Result<(), String> {
                     .collect(),
             );
             log::info!("Accounts imported.");
-            *progress = 40.;
 
             let _ = store.create_categories(
                 &deserialized
@@ -54,7 +51,6 @@ pub fn import_from_json(url: &Url, progress: &mut f32) -> Result<(), String> {
                     .collect(),
             );
             log::info!("Categories imported.");
-            *progress = 60.;
 
             let _ = store.create_money_transactions(
                 &deserialized
@@ -64,7 +60,6 @@ pub fn import_from_json(url: &Url, progress: &mut f32) -> Result<(), String> {
                     .collect(),
             );
             log::info!("Transactions imported.");
-            *progress = 80.;
 
             match store.get_currencies() {
                 Ok(list) => {
@@ -83,7 +78,6 @@ pub fn import_from_json(url: &Url, progress: &mut f32) -> Result<(), String> {
                     log::warn!("Setting currency ID to 0 due to error.");
                 }
             }
-            *progress = 100.;
             log::info!("Import from JSON completed successfully.");
             Ok(())
         }

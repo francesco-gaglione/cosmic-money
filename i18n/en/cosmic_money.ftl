@@ -15,6 +15,7 @@ currency-message = Choose your default currency
 welcome-income-categories = Income categories
 welcome-expense-categories = Expense categories
 welcome-initial-accounts = Initial accounts
+welcome-import-message = If you have a data file you can import it
 setup = Setup
 
 page_accounts = Accounts

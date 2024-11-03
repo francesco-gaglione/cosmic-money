@@ -1,12 +1,12 @@
 use chrono::{Datelike, Duration, Local, NaiveDate};
 use cosmic::{
     iced::{Alignment, Length, Padding},
-    widget::{self, horizontal_space, Space},
+    widget::{self, Space},
     Element, Task,
 };
 
 use crate::{
-    app::{self, Message},
+    app::AppMessage,
     config::Config,
     fl,
     models::{Category, NewCategory, UpdateCategory},
@@ -342,7 +342,7 @@ impl Categories {
         widget::scrollable(element).into()
     }
 
-    pub fn update(&mut self, message: CategoriesMessage) -> Task<crate::app::Message> {
+    pub fn update(&mut self, message: CategoriesMessage) -> Task<AppMessage> {
         let mut commands = vec![];
         match message {
             CategoriesMessage::Update => {
@@ -376,10 +376,10 @@ impl Categories {
                 self.add_category_view_active = false;
                 self.form_new_category_name = "".to_string();
                 commands.push(Task::perform(async {}, |_| {
-                    Message::Categories(super::categories::CategoriesMessage::Update)
+                    AppMessage::Categories(super::categories::CategoriesMessage::Update)
                 }));
                 commands.push(Task::perform(async {}, |_| {
-                    app::Message::Transactions(TransactionMessage::UpdatePage)
+                    AppMessage::Transactions(TransactionMessage::UpdatePage)
                 }));
             }
             CategoriesMessage::EditCategoryName(value) => {
@@ -442,7 +442,7 @@ impl Categories {
                     let _ = store.update_category(&update_category);
                     self.edit_category_id = None;
                     commands.push(Task::perform(async {}, |_| {
-                        Message::Categories(super::categories::CategoriesMessage::Update)
+                        AppMessage::Categories(super::categories::CategoriesMessage::Update)
                     }));
                 }
             }

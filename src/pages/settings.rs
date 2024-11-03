@@ -1,17 +1,6 @@
-use crate::{
-    app,
-    config::Config,
-    fl,
-    models::Currency,
-    synchronization::{export::export_to_folder, import::import_from_json},
-    STORE,
-};
+use crate::{app::AppMessage, config::Config, fl, models::Currency, STORE};
 use cosmic::{
-    dialog::{
-        ashpd::url::Url,
-        file_chooser::{self, FileFilter},
-    },
-    iced::{Length, Padding},
+    iced::Length,
     widget::{self, Space},
     Element, Task,
 };
@@ -21,16 +10,12 @@ pub enum SettingsMessage {
     Update,
     CurrencyChanged(usize),
     Import,
-    ImportFromJsonFile(Url),
     Export,
-    ExportToFolder(Url),
 }
 
 pub struct Settings {
     currency_list: Vec<Currency>,
     selected_currency: Option<usize>,
-    synchronization_progress: f32,
-    synchronization_in_progress: bool,
 }
 
 impl Default for Settings {
@@ -49,8 +34,6 @@ impl Default for Settings {
         Self {
             currency_list: currencies,
             selected_currency: Some(selected_currency),
-            synchronization_progress: 0.,
-            synchronization_in_progress: false,
         }
     }
 }
@@ -75,17 +58,6 @@ impl Settings {
             .push(Space::with_height(20))
             .push(widget::text::title4(fl!("import-export")))
             .push(widget::text::text(fl!("import-export-desc")))
-            .push_maybe(match self.synchronization_in_progress {
-                true => Some(
-                    widget::container(
-                        widget::progress_bar(0.0..=100.0, self.synchronization_progress)
-                            .height(Length::from(5)),
-                    )
-                    .width(Length::Fill)
-                    .padding(Padding::new(5.).vertical()),
-                ),
-                false => None,
-            })
             .push(Space::with_height(5))
             .push(
                 widget::row()
@@ -107,7 +79,7 @@ impl Settings {
         widget::scrollable(main_container).into()
     }
 
-    pub fn update(&mut self, message: SettingsMessage) -> Task<crate::app::Message> {
+    pub fn update(&mut self, message: SettingsMessage) -> Task<AppMessage> {
         let mut commands = vec![];
         match message {
             SettingsMessage::CurrencyChanged(index) => {
@@ -119,13 +91,13 @@ impl Settings {
                         .set_currency_id(&config.0.unwrap(), selected_currency.id);
                 }
                 commands.push(Task::perform(async {}, |_| {
-                    app::Message::Accounts(super::accounts::AccountsMessage::Update)
+                    AppMessage::Accounts(super::accounts::AccountsMessage::Update)
                 }));
                 commands.push(Task::perform(async {}, |_| {
-                    app::Message::Categories(super::categories::CategoriesMessage::Update)
+                    AppMessage::Categories(super::categories::CategoriesMessage::Update)
                 }));
                 commands.push(Task::perform(async {}, |_| {
-                    app::Message::Transactions(super::transactions::TransactionMessage::UpdatePage)
+                    AppMessage::Transactions(super::transactions::TransactionMessage::UpdatePage)
                 }));
             }
             SettingsMessage::Update => {
@@ -143,71 +115,10 @@ impl Settings {
                 self.selected_currency = Some(selected_currency);
             }
             SettingsMessage::Import => {
-                self.synchronization_in_progress = true;
-                commands.push(cosmic::command::future(async move {
-                    let filter = FileFilter::new("json files").glob("*.json");
-                    let dialog = file_chooser::open::Dialog::new()
-                        .title("Choose a data file")
-                        .filter(filter);
-                    match dialog.open_file().await {
-                        Ok(selected_file) => {
-                            app::Message::ImportFromFile(selected_file.url().clone())
-                        }
-                        Err(file_chooser::Error::Cancelled) => {
-                            app::Message::ShowToast(fl!("operation-cancelled"))
-                        }
-                        Err(_why) => app::Message::ShowToast(fl!("operation-cancelled")),
-                    }
-                }));
-            }
-            SettingsMessage::ImportFromJsonFile(url) => {
-                log::info!("Import from {:?}", url);
-                match import_from_json(&url, &mut self.synchronization_progress) {
-                    Ok(_) => {
-                        commands.push(Task::perform(async {}, |_| {
-                            app::Message::ShowToast(fl!("import-success"))
-                        }));
-                    }
-                    Err(_) => {
-                        commands.push(Task::perform(async {}, |_| {
-                            app::Message::ShowToast(fl!("import-error"))
-                        }));
-                    }
-                }
-                self.synchronization_in_progress = false;
-                commands.push(Task::perform(async {}, |_| app::Message::UpdateAllPages));
+                commands.push(Task::perform(async {}, |_| AppMessage::Import));
             }
             SettingsMessage::Export => {
-                self.synchronization_in_progress = true;
-                commands.push(cosmic::command::future(async move {
-                    let dialog =
-                        file_chooser::open::Dialog::new().title("Choose a destination folder");
-                    match dialog.open_folder().await {
-                        Ok(selected_folder) => {
-                            app::Message::ExportDirectoryChosen(selected_folder.url().clone())
-                        }
-                        Err(file_chooser::Error::Cancelled) => {
-                            app::Message::ShowToast(fl!("operation-cancelled"))
-                        }
-                        Err(_why) => app::Message::ShowToast(fl!("operation-cancelled")),
-                    }
-                }));
-            }
-            SettingsMessage::ExportToFolder(url) => {
-                log::info!("Exporting data...");
-                match export_to_folder(url, &mut self.synchronization_progress) {
-                    Ok(_) => {
-                        commands.push(Task::perform(async {}, |_| {
-                            app::Message::ShowToast(fl!("export-completed"))
-                        }));
-                    }
-                    Err(_) => {
-                        commands.push(Task::perform(async {}, |_| {
-                            app::Message::ShowToast(fl!("export-error"))
-                        }));
-                    }
-                }
-                self.synchronization_in_progress = false;
+                commands.push(Task::perform(async {}, |_| AppMessage::Export));
             }
         }
         Task::batch(commands)

@@ -1,6 +1,6 @@
 use cosmic::{widget::icon, Element};
 
-use crate::{app, fl};
+use crate::{app::{self, AppMessage}, fl};
 
 #[derive(Clone, Copy, Default, Debug, Eq, PartialEq)]
 pub enum NavPage {
@@ -39,13 +39,13 @@ impl NavPage {
         }
     }
 
-    pub fn view<'a>(&self, app: &'a app::MoneyManager) -> Element<'a, app::Message> {
+    pub fn view<'a>(&self, app: &'a app::MoneyManager) -> Element<'a, AppMessage> {
         match self {
-            NavPage::Accounts => app.accounts.view().map(app::Message::Accounts),
-            NavPage::Categories => app.categories.view().map(app::Message::Categories),
-            NavPage::Transactions => app.transactions.view().map(app::Message::Transactions),
-            NavPage::Settings => app.settings.view().map(app::Message::Settings),
-            NavPage::Welcome => app.welcome.view().map(app::Message::Welcome),
+            NavPage::Accounts => app.accounts.view().map(AppMessage::Accounts),
+            NavPage::Categories => app.categories.view().map(AppMessage::Categories),
+            NavPage::Transactions => app.transactions.view().map(AppMessage::Transactions),
+            NavPage::Settings => app.settings.view().map(AppMessage::Settings),
+            NavPage::Welcome => app.welcome.view().map(AppMessage::Welcome),
         }
     }
 
