@@ -5,7 +5,7 @@ use cosmic::{
 };
 
 use crate::{
-    app,
+    app::{self, AppMessage},
     config::Config,
     fl,
     models::{Account, NewAccount, UpdateAccount},
@@ -284,7 +284,7 @@ impl Accounts {
         element.into()
     }
 
-    pub fn update(&mut self, message: AccountsMessage) -> Task<crate::app::Message> {
+    pub fn update(&mut self, message: AccountsMessage) -> Task<AppMessage> {
         let mut commands = Vec::new();
         match message {
             AccountsMessage::Update => {
@@ -330,7 +330,7 @@ impl Accounts {
                 let mut store = STORE.lock().unwrap();
                 store.create_account(&new_account);
                 commands.push(Task::perform(async {}, |_| {
-                    app::Message::Accounts(AccountsMessage::Update)
+                    AppMessage::Accounts(AccountsMessage::Update)
                 }));
                 self.add_account_view_visible = false;
             }
@@ -372,13 +372,13 @@ impl Accounts {
                 let mut store = STORE.lock().unwrap();
                 let _ = store.update_account(&update_account);
                 commands.push(Task::perform(async {}, |_| {
-                    app::Message::Accounts(AccountsMessage::Update)
+                    AppMessage::Accounts(AccountsMessage::Update)
                 }));
                 commands.push(Task::perform(async {}, |_| {
-                    app::Message::Transactions(TransactionMessage::UpdatePage)
+                    AppMessage::Transactions(TransactionMessage::UpdatePage)
                 }));
                 commands.push(Task::perform(async {}, |_| {
-                    app::Message::Accounts(AccountsMessage::CloseEditAccount)
+                    AppMessage::Accounts(AccountsMessage::CloseEditAccount)
                 }));
             }
         }

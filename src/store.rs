@@ -43,7 +43,10 @@ impl Store {
         Ok(())
     }
 
-    pub fn create_accounts(&mut self, new_accounts: &[NewAccount]) -> Result<(), DataStoreError> {
+    pub fn create_accounts(
+        &mut self,
+        new_accounts: &Vec<NewAccount>,
+    ) -> Result<(), DataStoreError> {
         self.connection
             .transaction::<_, DieselError, _>(|conn| {
                 for new_account in new_accounts {
@@ -164,7 +167,7 @@ impl Store {
 
     pub fn create_categories(
         &mut self,
-        new_categories: &[NewCategory],
+        new_categories: &Vec<NewCategory>,
     ) -> Result<(), DataStoreError> {
         self.connection
             .transaction::<_, DieselError, _>(|conn| {
@@ -227,6 +230,21 @@ impl Store {
         Ok(())
     }
 
+    pub fn create_money_transactions(
+        &mut self,
+        new_money_transactions: &Vec<NewMoneyTransaction>,
+    ) -> Result<(), DataStoreError> {
+        let res = diesel::insert_into(money_transaction::table)
+            .values(new_money_transactions)
+            .execute(&mut self.connection);
+
+        if let Err(e) = res {
+            return Err(DataStoreError::InsertError(e.to_string()));
+        }
+
+        Ok(())
+    }
+
     pub fn get_currencies(&mut self) -> Result<Vec<Currency>, DataStoreError> {
         let results = currency
             .select(Currency::as_select())
@@ -253,5 +271,14 @@ impl Store {
             Ok(currency_symbol) => Ok(currency_symbol),
             Err(e) => Err(DataStoreError::QueryError(e.to_string())),
         }
+    }
+
+    pub fn drop_all(&mut self) -> Result<(), DataStoreError> {
+        log::info!("Deleting all tables...");
+        diesel::delete(account).execute(&mut self.connection);
+        diesel::delete(money_transaction).execute(&mut self.connection);
+        diesel::delete(category).execute(&mut self.connection);
+        log::info!("All tables deleted.");
+        Ok(())
     }
 }

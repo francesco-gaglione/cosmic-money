@@ -1,4 +1,4 @@
-use crate::app;
+use crate::app::AppMessage;
 use crate::models::{NewAccount, NewCategory};
 use crate::{config::Config, fl, models::Currency, STORE};
 use cosmic::iced::alignment::Horizontal;
@@ -31,6 +31,8 @@ pub enum WelcomeMessage {
     NewAccountCancel,
     DeleteAccount(NewAccount),
     Setup,
+    Import,
+    ImportCompleted,
 }
 
 pub struct Welcome {
@@ -94,6 +96,25 @@ impl Welcome {
 
         main_col = main_col.push(Space::with_height(40));
 
+        main_col = main_col.push(
+            widget::container(
+                widget::column()
+                    .push(widget::text::title4(fl!("import")))
+                    .push(widget::text::text(fl!("welcome-import-message")))
+                    .push(widget::Space::with_height(10))
+                    .push(
+                        widget::button::text(fl!("import"))
+                            .on_press(WelcomeMessage::Import)
+                            .class(widget::button::ButtonClass::Suggested),
+                    )
+                    .push(widget::Space::with_height(10)),
+            )
+            .width(Length::Fill)
+            .padding(Padding::from(10))
+            .class(cosmic::theme::Container::Card),
+        );
+
+        main_col = main_col.push(Space::with_height(10));
         main_col = main_col.push(
             widget::container(
                 widget::column()
@@ -374,7 +395,7 @@ impl Welcome {
         element.into()
     }
 
-    pub fn update(&mut self, message: WelcomeMessage) -> Task<crate::app::Message> {
+    pub fn update(&mut self, message: WelcomeMessage) -> Task<AppMessage> {
         let mut commands = vec![];
         match message {
             WelcomeMessage::CurrencyChanged(index) => {
@@ -476,9 +497,9 @@ impl Welcome {
             }
             WelcomeMessage::Setup => {
                 let mut store = STORE.lock().unwrap();
-                store.create_accounts(&self.accounts);
-                store.create_categories(&self.income_categories);
-                store.create_categories(&self.expense_categories);
+                let _ = store.create_accounts(&self.accounts);
+                let _ = store.create_categories(&self.income_categories);
+                let _ = store.create_categories(&self.expense_categories);
                 if let Some(selected_currency) = self
                     .currency_list
                     .get(self.selected_currency.unwrap())
@@ -490,19 +511,18 @@ impl Welcome {
                         .set_currency_id(&config.clone().0.unwrap(), selected_currency.id);
                     let _ = config.1.set_is_user_initialized(&config.0.unwrap(), true);
                 }
-                commands.push(Task::perform(async {}, |_| app::Message::GoToAccounts));
-                commands.push(Task::perform(async {}, |_| {
-                    app::Message::Transactions(TransactionMessage::UpdatePage)
-                }));
-                commands.push(Task::perform(async {}, |_| {
-                    app::Message::Accounts(AccountsMessage::Update)
-                }));
-                commands.push(Task::perform(async {}, |_| {
-                    app::Message::Categories(CategoriesMessage::Update)
-                }));
-                commands.push(Task::perform(async {}, |_| {
-                    app::Message::Settings(SettingsMessage::Update)
-                }));
+                commands.push(Task::perform(async {}, |_| AppMessage::GoToAccounts));
+                commands.push(Task::perform(async {}, |_| AppMessage::UpdateAllPages));
+            }
+            WelcomeMessage::Import => {
+                commands.push(Task::perform(async {}, |_| AppMessage::Import));
+            }
+            WelcomeMessage::ImportCompleted => {
+                let mut config = Config::load();
+                let _ = config.1.set_is_user_initialized(&config.0.unwrap(), true);
+
+                commands.push(Task::perform(async {}, |_| AppMessage::GoToAccounts));
+                commands.push(Task::perform(async {}, |_| AppMessage::UpdateAllPages));
             }
         }
         Task::batch(commands)

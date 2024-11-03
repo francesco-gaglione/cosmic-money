@@ -6,7 +6,7 @@ use cosmic::{
 };
 
 use crate::{
-    app,
+    app::{self, AppMessage},
     config::Config,
     fl,
     models::{Account, Category, MoneyTransaction, NewMoneyTransaction},
@@ -286,7 +286,7 @@ impl Transactions {
         element.into()
     }
 
-    pub fn update(&mut self, message: TransactionMessage) -> Task<crate::app::Message> {
+    pub fn update(&mut self, message: TransactionMessage) -> Task<AppMessage> {
         let mut commands = Vec::new();
         match message {
             TransactionMessage::UpdatePage => {
@@ -352,7 +352,7 @@ impl Transactions {
                 };
                 let _ = store.create_money_transaction(&new_transaction);
                 commands.push(Task::perform(async {}, |_| {
-                    app::Message::Transactions(TransactionMessage::UpdatePage)
+                    AppMessage::Transactions(TransactionMessage::UpdatePage)
                 }));
                 self.add_transaction_view = false;
             }

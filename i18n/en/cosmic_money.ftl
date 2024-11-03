@@ -15,6 +15,7 @@ currency-message = Choose your default currency
 welcome-income-categories = Income categories
 welcome-expense-categories = Expense categories
 welcome-initial-accounts = Initial accounts
+welcome-import-message = If you have a data file you can import it
 setup = Setup
 
 page_accounts = Accounts
@@ -66,3 +67,12 @@ month-11 = November
 month-12 = December
 
 currency = Currency
+import-export = Import/Export data
+import-export-desc = Here you can import or export your data.
+import = Import
+export = Export
+export-completed = Export to file completed
+export-error = Error happened during file export
+import-error = Error happened during file import
+import-success = Import from file completed
+operation-cancelled = Operation cancelled
