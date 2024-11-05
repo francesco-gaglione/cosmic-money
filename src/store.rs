@@ -214,6 +214,25 @@ impl Store {
         }
     }
 
+    pub fn get_money_transactions_date_range(
+        &mut self,
+        start_date: &NaiveDate,
+        end_date: &NaiveDate,
+    ) -> Result<Vec<MoneyTransaction>, DataStoreError> {
+        let results = money_transaction
+            .filter(
+                transaction_date.between(start_date.and_hms(0, 0, 0), end_date.and_hms(23, 59, 59)),
+            )
+            .select(MoneyTransaction::as_select())
+            .order(transaction_date.desc())
+            .load(&mut self.connection);
+
+        match results {
+            Ok(results) => Ok(results),
+            Err(e) => Err(DataStoreError::QueryError(e.to_string())),
+        }
+    }
+
     pub fn create_money_transaction(
         &mut self,
         new_money_transaction: &NewMoneyTransaction,

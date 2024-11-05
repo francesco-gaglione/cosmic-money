@@ -42,6 +42,8 @@ category-description = Category description
 category-type = Category type
 income-categories = Income categories
 expense-categories = Expense categories
+expenses-period = Expenses by period
+income-period = Income by period
 
 transactions = Transactions
 add-transaction = Add transaction

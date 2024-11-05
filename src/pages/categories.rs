@@ -1,6 +1,6 @@
 use chrono::{Datelike, Duration, Local, NaiveDate};
 use cosmic::{
-    iced::{Alignment, Length, Padding},
+    iced::{alignment::Horizontal, Alignment, Length, Padding},
     widget::{self, Space},
     Element, Task,
 };
@@ -9,7 +9,7 @@ use crate::{
     app::AppMessage,
     config::Config,
     fl,
-    models::{Category, NewCategory, UpdateCategory},
+    models::{Category, MoneyTransaction, NewCategory, UpdateCategory},
     STORE,
 };
 
@@ -158,12 +158,22 @@ impl Categories {
         let info_col = widget::column()
             .push(widget::text::title4(c.name.clone()))
             .push(widget::text::text(c.category_description.clone()))
-            .push(widget::text::text(format!(
-                "{}: {} {}",
-                fl!("balance"),
-                self.calculate_by_category_id(c.id).to_string(),
-                self.currency_symbol
-            )))
+            .push(
+                widget::row().width(Length::Fill).push(
+                    widget::column()
+                        .push(widget::text::text(format!(
+                            "{}: {} {}",
+                            if c.is_income {
+                                fl!("income-period")
+                            } else {
+                                fl!("expenses-period")
+                            },
+                            self.calculate_by_category_id(c.id).to_string(),
+                            self.currency_symbol
+                        )))
+                        .width(Length::Fill),
+                ),
+            )
             .width(Length::Fill);
 
         let row = widget::row().push(info_col).push(
@@ -171,6 +181,16 @@ impl Categories {
                 .push(
                     widget::button::icon(widget::icon::from_name("edit-symbolic"))
                         .on_press(CategoriesMessage::EditCategory(c.id)),
+                )
+                .push(widget::Space::with_height(15))
+                .push(
+                    widget::column()
+                        .width(Length::Fill)
+                        .push(widget::text::text(format!(
+                            "{}%",
+                            self.percentabe_by_category(c.id)
+                        )))
+                        .align_x(Horizontal::Right),
                 )
                 .align_x(Alignment::End)
                 .width(Length::Fill),
@@ -375,6 +395,7 @@ impl Categories {
                 let _ = store.create_category(&new_category);
                 self.add_category_view_active = false;
                 self.form_new_category_name = "".to_string();
+                self.form_new_category_description = "".to_string();
                 commands.push(Task::perform(async {}, |_| {
                     AppMessage::Categories(super::categories::CategoriesMessage::Update)
                 }));
@@ -457,6 +478,27 @@ impl Categories {
             Ok(val) => val,
             Err(_) => 0.,
         }
+    }
+
+    fn percentabe_by_category(&self, category_id: i32) -> u32 {
+        let mut store = STORE.lock().unwrap();
+        let (start_date, end_date) = self.get_month_start_and_end();
+        let transactions = store
+            .get_money_transactions_date_range(&start_date, &end_date)
+            .unwrap_or_else(|_| vec![]);
+
+        let category_sum: f32 = transactions
+            .iter()
+            .filter(|t| t.transaction_category == category_id)
+            .map(|t| if t.is_expense { t.amount } else { 0. })
+            .sum();
+
+        let transaction_sum: f32 = transactions
+            .iter()
+            .map(|t| if t.is_expense { t.amount } else { 0. })
+            .sum();
+
+        ((category_sum / transaction_sum) * 100.) as u32
     }
 
     fn get_month_start_and_end(&self) -> (NaiveDate, NaiveDate) {

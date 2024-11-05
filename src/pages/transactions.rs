@@ -6,7 +6,7 @@ use cosmic::{
 };
 
 use crate::{
-    app::{self, AppMessage},
+    app::AppMessage,
     config::Config,
     fl,
     models::{Account, Category, MoneyTransaction, NewMoneyTransaction},
