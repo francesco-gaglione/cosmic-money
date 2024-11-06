@@ -2,8 +2,10 @@ use crate::schema::account;
 use crate::schema::category;
 use crate::schema::money_transaction;
 use diesel::prelude::*;
+use serde::Deserialize;
+use serde::Serialize;
 
-#[derive(Queryable, Selectable, Clone)]
+#[derive(Queryable, Selectable, Debug, Clone, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::account)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Account {
@@ -27,6 +29,16 @@ pub struct NewAccount {
     pub account_description: String,
 }
 
+impl From<&Account> for NewAccount {
+    fn from(value: &Account) -> Self {
+        Self {
+            name: value.name.clone(),
+            initial_balance: value.initial_balance,
+            account_description: value.account_description.clone(),
+        }
+    }
+}
+
 #[derive(Insertable)]
 #[diesel(table_name = account)]
 pub struct UpdateAccount {
@@ -36,7 +48,7 @@ pub struct UpdateAccount {
     pub account_description: String,
 }
 
-#[derive(Queryable, Selectable, Debug, Clone)]
+#[derive(Queryable, Selectable, Debug, Clone, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::category)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Category {
@@ -60,6 +72,16 @@ pub struct NewCategory {
     pub category_description: String,
 }
 
+impl From<&Category> for NewCategory {
+    fn from(value: &Category) -> Self {
+        Self {
+            name: value.name.clone(),
+            is_income: value.is_income,
+            category_description: value.category_description.clone(),
+        }
+    }
+}
+
 #[derive(Insertable)]
 #[diesel(table_name = category)]
 pub struct UpdateCategory<'a> {
@@ -69,7 +91,7 @@ pub struct UpdateCategory<'a> {
     pub category_description: String,
 }
 
-#[derive(Queryable, Selectable, Debug)]
+#[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::money_transaction)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct MoneyTransaction {
@@ -91,6 +113,19 @@ pub struct NewMoneyTransaction {
     pub amount: f32,
     pub transaction_date: chrono::NaiveDateTime,
     pub is_expense: bool,
+}
+
+impl From<&MoneyTransaction> for NewMoneyTransaction {
+    fn from(value: &MoneyTransaction) -> Self {
+        Self {
+            bank_account: value.bank_account,
+            transaction_category: value.transaction_category,
+            description: value.description.clone(),
+            amount: value.amount,
+            transaction_date: value.transaction_date,
+            is_expense: value.is_expense,
+        }
+    }
 }
 
 #[derive(Queryable, Selectable, Debug)]
