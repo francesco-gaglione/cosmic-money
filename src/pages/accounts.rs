@@ -338,7 +338,7 @@ impl Accounts {
                     account_description: self.new_account_description.clone(),
                 };
                 let mut store = STORE.lock().unwrap();
-                store.create_account(&new_account);
+                let _ = store.create_account(&new_account);
                 commands.push(Task::perform(async {}, |_| {
                     AppMessage::Accounts(AccountsMessage::Update)
                 }));

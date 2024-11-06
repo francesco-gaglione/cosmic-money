@@ -319,9 +319,9 @@ impl Store {
 
     pub fn drop_all(&mut self) -> Result<(), DataStoreError> {
         log::info!("Deleting all tables...");
-        diesel::delete(account).execute(&mut self.connection);
-        diesel::delete(money_transaction).execute(&mut self.connection);
-        diesel::delete(category).execute(&mut self.connection);
+        let _ = diesel::delete(account).execute(&mut self.connection);
+        let _ = diesel::delete(money_transaction).execute(&mut self.connection);
+        let _ = diesel::delete(category).execute(&mut self.connection);
         log::info!("All tables deleted.");
         Ok(())
     }

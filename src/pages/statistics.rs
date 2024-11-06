@@ -1,22 +1,19 @@
 use std::collections::HashMap;
 
-use chrono::{Datelike, Duration, Local, NaiveDate};
+use chrono::{Datelike, Local, NaiveDate};
 use cosmic::{
     iced::{
         self,
         alignment::{Horizontal, Vertical},
         Alignment, Length, Padding,
     },
-    theme::ProgressBar,
     widget::{self, column, progress_bar, Space},
     Element, Task,
 };
 
 use crate::{
-    app::{self, AppMessage},
-    config::Config,
+    app::{AppMessage},
     fl,
-    models::MoneyTransaction,
     utils::dates::get_month_date_range,
     STORE,
 };
@@ -182,7 +179,7 @@ impl Statistics {
     }
 
     pub fn update(&mut self, message: StatisticsMessage) -> Task<AppMessage> {
-        let mut commands = Vec::new();
+        let commands = Vec::new();
         match message {
             StatisticsMessage::Update => {
                 self.generate_distribution();
