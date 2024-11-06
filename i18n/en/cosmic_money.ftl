@@ -80,3 +80,5 @@ import-success = Import from file completed
 operation-cancelled = Operation cancelled
 
 statistics = Statistics
+ratio = Income/Expense ratio
+ratio-value = Ratio: {$ratio}
