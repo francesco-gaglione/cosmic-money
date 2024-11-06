@@ -314,15 +314,22 @@ impl Transactions {
             TransactionMessage::FormNoteChanged(note) => {
                 self.form_note = note;
             }
-            TransactionMessage::FormAmountChanged(new_amount) => match new_amount.parse::<f32>() {
-                Ok(parsed_amount) => {
-                    self.new_transaction_amount = parsed_amount;
+            TransactionMessage::FormAmountChanged(new_amount) => {
+                if new_amount.is_empty() {
+                    self.new_transaction_amount = 0.0;
                     self.form_amount = new_amount;
+                } else {
+                    match new_amount.parse::<f32>() {
+                        Ok(parsed_amount) => {
+                            self.new_transaction_amount = parsed_amount;
+                            self.form_amount = new_amount;
+                        }
+                        Err(_) => {
+                            eprintln!("Failed to parse the amount: {}", new_amount);
+                        }
+                    }
                 }
-                Err(_) => {
-                    eprintln!("Failed to parse the amount: {}", new_amount);
-                }
-            },
+            }
             TransactionMessage::SubmitTransaction => {
                 let mut is_expense: bool = true;
                 if let Some(id) = self
@@ -358,6 +365,8 @@ impl Transactions {
             }
             TransactionMessage::CandellAddTransaction => {
                 self.add_transaction_view = false;
+                self.form_amount = "".to_string();
+                self.form_note = "".to_string();
             }
             TransactionMessage::FormDateChanged(date) => {
                 log::info!("form date changed: {:?}", date);
