@@ -9,7 +9,7 @@ use crate::{
     app::AppMessage,
     config::Config,
     fl,
-    models::{Category, MoneyTransaction, NewCategory, UpdateCategory},
+    models::{Category, NewCategory, UpdateCategory},
     STORE,
 };
 
@@ -168,7 +168,7 @@ impl Categories {
                             } else {
                                 fl!("expenses-period")
                             },
-                            self.calculate_by_category_id(c.id).to_string(),
+                            self.calculate_by_category_id(c.id, c.is_income).to_string(),
                             self.currency_symbol
                         )))
                         .width(Length::Fill),
@@ -188,7 +188,7 @@ impl Categories {
                         .width(Length::Fill)
                         .push(widget::text::text(format!(
                             "{}%",
-                            self.percentabe_by_category(c.id)
+                            self.percentabe_by_category(c.id, c.is_income)
                         )))
                         .align_x(Horizontal::Right),
                 )
@@ -471,16 +471,23 @@ impl Categories {
         Task::batch(commands)
     }
 
-    fn calculate_by_category_id(&self, category_id: i32) -> f32 {
+    fn calculate_by_category_id(&self, category_id: i32, is_income: bool) -> f32 {
         let mut store = STORE.lock().unwrap();
         let (start_date, end_date) = self.get_month_start_and_end();
-        match store.calculate_expense_by_category(category_id, &start_date, &end_date) {
-            Ok(val) => val,
-            Err(_) => 0.,
+        if is_income {
+            match store.calculate_income_by_category(category_id, &start_date, &end_date) {
+                Ok(val) => val,
+                Err(_) => 0.,
+            }
+        } else {
+            match store.calculate_expense_by_category(category_id, &start_date, &end_date) {
+                Ok(val) => val,
+                Err(_) => 0.,
+            }
         }
     }
 
-    fn percentabe_by_category(&self, category_id: i32) -> u32 {
+    fn percentabe_by_category(&self, category_id: i32, is_income: bool) -> u32 {
         let mut store = STORE.lock().unwrap();
         let (start_date, end_date) = self.get_month_start_and_end();
         let transactions = store
@@ -490,12 +497,24 @@ impl Categories {
         let category_sum: f32 = transactions
             .iter()
             .filter(|t| t.transaction_category == category_id)
-            .map(|t| if t.is_expense { t.amount } else { 0. })
+            .map(|t| {
+                if t.is_expense == !is_income {
+                    t.amount
+                } else {
+                    0.
+                }
+            })
             .sum();
 
         let transaction_sum: f32 = transactions
             .iter()
-            .map(|t| if t.is_expense { t.amount } else { 0. })
+            .map(|t| {
+                if t.is_expense == !is_income {
+                    t.amount
+                } else {
+                    0.
+                }
+            })
             .sum();
 
         ((category_sum / transaction_sum) * 100.) as u32

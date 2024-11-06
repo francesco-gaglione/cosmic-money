@@ -152,6 +152,31 @@ impl Store {
         }
     }
 
+    pub fn calculate_income_by_category(
+        &mut self,
+        category_id: i32,
+        start_date: &NaiveDate,
+        end_date: &NaiveDate,
+    ) -> Result<f32, DataStoreError> {
+        use diesel::dsl::sum;
+        use schema::money_transaction::dsl::*;
+
+        let total_expense = money_transaction
+            .filter(transaction_category.eq(category_id))
+            .filter(
+                transaction_date.between(start_date.and_hms(0, 0, 0), end_date.and_hms(23, 59, 59)),
+            )
+            .filter(is_expense.eq(false))
+            .select(sum(amount))
+            .first::<Option<f32>>(&mut self.connection);
+
+        match total_expense {
+            Ok(Some(total)) => Ok(total),
+            Ok(None) => Ok(0.0),
+            Err(e) => Err(DataStoreError::QueryError(e.to_string())),
+        }
+    }
+
     pub fn create_category(&mut self, new_category: &NewCategory) -> Result<(), DataStoreError> {
         let res = diesel::insert_into(category::table)
             .values(new_category)
