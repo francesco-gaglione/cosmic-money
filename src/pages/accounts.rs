@@ -1,11 +1,11 @@
 use cosmic::{
-    iced::{self, Length, Padding},
+    iced::{self, alignment::Vertical, Length, Padding},
     widget::{self, column, settings, Space},
     Element, Task,
 };
 
 use crate::{
-    app,
+    app::{self, AppMessage},
     config::Config,
     fl,
     models::{Account, NewAccount, UpdateAccount},
@@ -75,7 +75,17 @@ impl Default for Accounts {
 
 impl Accounts {
     pub fn view<'a>(&'a self) -> Element<'a, AccountsMessage> {
-        let mut col = column::<AccountsMessage>().push(widget::text::title1(fl!("page_accounts")));
+        let mut col = column::<AccountsMessage>().push(
+            widget::row()
+                .align_y(Vertical::Center)
+                .push(widget::text::title1(fl!("page_accounts")))
+                .push(widget::Space::with_width(Length::Fill))
+                .push(widget::text::title4(fl!(
+                    "total-balance",
+                    balance = format!("{:.2}", self.calc_total_balance()),
+                    currency = self.currency_symbol.clone()
+                ))),
+        );
 
         col = col.push(
             widget::container(
@@ -284,7 +294,7 @@ impl Accounts {
         element.into()
     }
 
-    pub fn update(&mut self, message: AccountsMessage) -> Task<crate::app::Message> {
+    pub fn update(&mut self, message: AccountsMessage) -> Task<AppMessage> {
         let mut commands = Vec::new();
         match message {
             AccountsMessage::Update => {
@@ -330,7 +340,7 @@ impl Accounts {
                 let mut store = STORE.lock().unwrap();
                 store.create_account(&new_account);
                 commands.push(Task::perform(async {}, |_| {
-                    app::Message::Accounts(AccountsMessage::Update)
+                    AppMessage::Accounts(AccountsMessage::Update)
                 }));
                 self.add_account_view_visible = false;
             }
@@ -372,13 +382,13 @@ impl Accounts {
                 let mut store = STORE.lock().unwrap();
                 let _ = store.update_account(&update_account);
                 commands.push(Task::perform(async {}, |_| {
-                    app::Message::Accounts(AccountsMessage::Update)
+                    AppMessage::Accounts(AccountsMessage::Update)
                 }));
                 commands.push(Task::perform(async {}, |_| {
-                    app::Message::Transactions(TransactionMessage::UpdatePage)
+                    AppMessage::Transactions(TransactionMessage::UpdatePage)
                 }));
                 commands.push(Task::perform(async {}, |_| {
-                    app::Message::Accounts(AccountsMessage::CloseEditAccount)
+                    AppMessage::Accounts(AccountsMessage::CloseEditAccount)
                 }));
             }
         }
@@ -392,5 +402,12 @@ impl Accounts {
         } else {
             0.
         }
+    }
+
+    fn calc_total_balance(&self) -> f32 {
+        self.accounts
+            .iter()
+            .map(|a| self.read_account_balance(a.id))
+            .sum()
     }
 }

@@ -43,7 +43,10 @@ impl Store {
         Ok(())
     }
 
-    pub fn create_accounts(&mut self, new_accounts: &[NewAccount]) -> Result<(), DataStoreError> {
+    pub fn create_accounts(
+        &mut self,
+        new_accounts: &Vec<NewAccount>,
+    ) -> Result<(), DataStoreError> {
         self.connection
             .transaction::<_, DieselError, _>(|conn| {
                 for new_account in new_accounts {
@@ -149,6 +152,31 @@ impl Store {
         }
     }
 
+    pub fn calculate_income_by_category(
+        &mut self,
+        category_id: i32,
+        start_date: &NaiveDate,
+        end_date: &NaiveDate,
+    ) -> Result<f32, DataStoreError> {
+        use diesel::dsl::sum;
+        use schema::money_transaction::dsl::*;
+
+        let total_expense = money_transaction
+            .filter(transaction_category.eq(category_id))
+            .filter(
+                transaction_date.between(start_date.and_hms(0, 0, 0), end_date.and_hms(23, 59, 59)),
+            )
+            .filter(is_expense.eq(false))
+            .select(sum(amount))
+            .first::<Option<f32>>(&mut self.connection);
+
+        match total_expense {
+            Ok(Some(total)) => Ok(total),
+            Ok(None) => Ok(0.0),
+            Err(e) => Err(DataStoreError::QueryError(e.to_string())),
+        }
+    }
+
     pub fn create_category(&mut self, new_category: &NewCategory) -> Result<(), DataStoreError> {
         let res = diesel::insert_into(category::table)
             .values(new_category)
@@ -164,7 +192,7 @@ impl Store {
 
     pub fn create_categories(
         &mut self,
-        new_categories: &[NewCategory],
+        new_categories: &Vec<NewCategory>,
     ) -> Result<(), DataStoreError> {
         self.connection
             .transaction::<_, DieselError, _>(|conn| {
@@ -211,6 +239,25 @@ impl Store {
         }
     }
 
+    pub fn get_money_transactions_date_range(
+        &mut self,
+        start_date: &NaiveDate,
+        end_date: &NaiveDate,
+    ) -> Result<Vec<MoneyTransaction>, DataStoreError> {
+        let results = money_transaction
+            .filter(
+                transaction_date.between(start_date.and_hms(0, 0, 0), end_date.and_hms(23, 59, 59)),
+            )
+            .select(MoneyTransaction::as_select())
+            .order(transaction_date.desc())
+            .load(&mut self.connection);
+
+        match results {
+            Ok(results) => Ok(results),
+            Err(e) => Err(DataStoreError::QueryError(e.to_string())),
+        }
+    }
+
     pub fn create_money_transaction(
         &mut self,
         new_money_transaction: &NewMoneyTransaction,
@@ -219,6 +266,21 @@ impl Store {
             .values(new_money_transaction)
             .returning(MoneyTransaction::as_returning())
             .get_result(&mut self.connection);
+
+        if let Err(e) = res {
+            return Err(DataStoreError::InsertError(e.to_string()));
+        }
+
+        Ok(())
+    }
+
+    pub fn create_money_transactions(
+        &mut self,
+        new_money_transactions: &Vec<NewMoneyTransaction>,
+    ) -> Result<(), DataStoreError> {
+        let res = diesel::insert_into(money_transaction::table)
+            .values(new_money_transactions)
+            .execute(&mut self.connection);
 
         if let Err(e) = res {
             return Err(DataStoreError::InsertError(e.to_string()));
@@ -253,5 +315,14 @@ impl Store {
             Ok(currency_symbol) => Ok(currency_symbol),
             Err(e) => Err(DataStoreError::QueryError(e.to_string())),
         }
+    }
+
+    pub fn drop_all(&mut self) -> Result<(), DataStoreError> {
+        log::info!("Deleting all tables...");
+        diesel::delete(account).execute(&mut self.connection);
+        diesel::delete(money_transaction).execute(&mut self.connection);
+        diesel::delete(category).execute(&mut self.connection);
+        log::info!("All tables deleted.");
+        Ok(())
     }
 }

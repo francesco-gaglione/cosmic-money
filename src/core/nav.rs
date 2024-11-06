@@ -1,6 +1,6 @@
 use cosmic::{widget::icon, Element};
 
-use crate::{app, fl};
+use crate::{app::{self, AppMessage}, fl};
 
 #[derive(Clone, Copy, Default, Debug, Eq, PartialEq)]
 pub enum NavPage {
@@ -9,6 +9,7 @@ pub enum NavPage {
     Categories,
     Transactions,
     Settings,
+    Statistics,
     Welcome,
 }
 
@@ -25,6 +26,7 @@ impl NavPage {
             Self::Categories => fl!("page_categories"),
             Self::Transactions => fl!("page_transactions"),
             Self::Settings => fl!("page_settings"),
+            Self::Statistics => fl!("statistics"),
             Self::Welcome => fl!("page-welcome"),
         }
     }
@@ -36,16 +38,18 @@ impl NavPage {
             NavPage::Transactions => icon::from_name("network-transmit-receive-symbolic").into(),
             NavPage::Settings => icon::from_name("application-default-symbolic").into(),
             NavPage::Welcome => icon::from_name("application-default-symbolic").into(), //TODO here the icon is useless
+            NavPage::Statistics => icon::from_name("preferences-displays-symbolic").into(),
         }
     }
 
-    pub fn view<'a>(&self, app: &'a app::MoneyManager) -> Element<'a, app::Message> {
+    pub fn view<'a>(&self, app: &'a app::MoneyManager) -> Element<'a, AppMessage> {
         match self {
-            NavPage::Accounts => app.accounts.view().map(app::Message::Accounts),
-            NavPage::Categories => app.categories.view().map(app::Message::Categories),
-            NavPage::Transactions => app.transactions.view().map(app::Message::Transactions),
-            NavPage::Settings => app.settings.view().map(app::Message::Settings),
-            NavPage::Welcome => app.welcome.view().map(app::Message::Welcome),
+            NavPage::Accounts => app.accounts.view().map(AppMessage::Accounts),
+            NavPage::Categories => app.categories.view().map(AppMessage::Categories),
+            NavPage::Transactions => app.transactions.view().map(AppMessage::Transactions),
+            NavPage::Settings => app.settings.view().map(AppMessage::Settings),
+            NavPage::Welcome => app.welcome.view().map(AppMessage::Welcome),
+            NavPage::Statistics => app.statistics.view().map(AppMessage::Statistics),
         }
     }
 
@@ -54,6 +58,7 @@ impl NavPage {
             Self::Accounts,
             Self::Categories,
             Self::Transactions,
+            Self::Statistics,
             Self::Settings,
         ]
     }

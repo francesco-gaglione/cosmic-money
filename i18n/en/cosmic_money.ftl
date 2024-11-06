@@ -15,6 +15,7 @@ currency-message = Choose your default currency
 welcome-income-categories = Income categories
 welcome-expense-categories = Expense categories
 welcome-initial-accounts = Initial accounts
+welcome-import-message = If you have a data file you can import it
 setup = Setup
 
 page_accounts = Accounts
@@ -32,6 +33,7 @@ account-description = Account description
 bank-account = Bank account
 initial-value = Initial value
 no-elements = No elements in this list
+total-balance = Total balance: {$balance} {$currency}
 
 view-settings = View settings
 add-category = Add category
@@ -41,6 +43,8 @@ category-description = Category description
 category-type = Category type
 income-categories = Income categories
 expense-categories = Expense categories
+expenses-period = Expenses by period
+income-period = Income by period
 
 transactions = Transactions
 add-transaction = Add transaction
@@ -66,9 +70,24 @@ month-11 = November
 month-12 = December
 
 day = Day:
-month = Month: 
-year = Year: 
-hour = Hour: 
-minutes = Minutes: 
+month = Month:
+year = Year:
+hour = Hour:
+minutes = Minutes:
 
 currency = Currency
+import-export = Import/Export data
+import-export-desc = Here you can import or export your data.
+import = Import
+export = Export
+export-completed = Export to file completed
+export-error = Error happened during file export
+import-error = Error happened during file import
+import-success = Import from file completed
+operation-cancelled = Operation cancelled
+
+statistics = Statistics
+ratio = Income/Expense ratio
+ratio-value = Ratio: {$ratio}
+monthly-distribution = Monthly Spending Distribution
+no-element-distribution = No element this month
