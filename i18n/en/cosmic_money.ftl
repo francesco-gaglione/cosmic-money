@@ -69,6 +69,12 @@ month-10 = October
 month-11 = November
 month-12 = December
 
+day = Day:
+month = Month:
+year = Year:
+hour = Hour:
+minutes = Minutes:
+
 currency = Currency
 import-export = Import/Export data
 import-export-desc = Here you can import or export your data.
