@@ -1,5 +1,6 @@
+use crate::fl;
 use chrono::{Datelike, Local, NaiveDateTime, TimeZone, Timelike, Utc};
-use cosmic::{widget, Element};
+use cosmic::{iced::alignment::Vertical, widget, Element};
 
 const DAYS: [&str; 31] = [
     "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16",
@@ -64,7 +65,8 @@ where
     element = element.push(
         widget::row::<M>()
             .spacing(5)
-            .push(widget::text("gg:"))
+            .align_y(Vertical::Center)
+            .push(widget::text(fl!("day")))
             .push(widget::dropdown(&DAYS, Some((day - 1) as usize), {
                 let on_input = on_input.clone();
                 move |selected_day| {
@@ -86,9 +88,10 @@ where
     element = element.push(
         widget::row::<M>()
             .spacing(5)
-            .push(widget::text("MM:"))
+            .align_y(Vertical::Center)
+            .push(widget::text(fl!("month")))
             .push(widget::dropdown(&MONTHS, Some((month - 1) as usize), {
-                let on_input = on_input.clone(); // Cloniamo on_input
+                let on_input = on_input.clone();
                 move |selected_month| {
                     if let Some(valid_timestamp) = validate_datetime_input(
                         day as usize,
@@ -108,7 +111,8 @@ where
     element = element.push(
         widget::row::<M>()
             .spacing(5)
-            .push(widget::text("yyyy:"))
+            .align_y(Vertical::Center)
+            .push(widget::text(fl!("year")))
             .push(widget::dropdown(
                 &[
                     "1970", "1971", "1972", "1973", "1974", "1975", "1976", "1977", "1978", "1979",
@@ -141,7 +145,8 @@ where
     element = element.push(
         widget::row::<M>()
             .spacing(5)
-            .push(widget::text("HH:"))
+            .align_y(Vertical::Center)
+            .push(widget::text(fl!("hour")))
             .push(widget::dropdown(&HOURS, Some(hour as usize), {
                 let on_input = on_input.clone();
                 move |selected_hour| {
@@ -163,7 +168,8 @@ where
     element = element.push(
         widget::row::<M>()
             .spacing(5)
-            .push(widget::text("mm:"))
+            .align_y(Vertical::Center)
+            .push(widget::text(fl!("minutes")))
             .push(widget::dropdown(&MINUTES, Some(minute as usize), {
                 let on_input = on_input.clone();
                 move |selected_minute| {

@@ -31,6 +31,7 @@ pub enum TransactionMessage {
 pub struct Transactions {
     currency_symbol: String,
     add_transaction_view: bool,
+    all_categories: Vec<Category>,
     categories: Vec<Category>,
     accounts: Vec<Account>,
     form_transaction_type: widget::segmented_button::SingleSelectModel,
@@ -49,10 +50,17 @@ impl Default for Transactions {
         let config = Config::load();
         let transactions = store.get_money_transactions().unwrap_or_else(|_| vec![]);
         let currency_symbol = store.get_currency_symbol_by_id(config.1.currency_id);
+        let all_categories = store.get_categories().unwrap_or_else(|_| vec![]);
+        let categories = all_categories
+            .iter()
+            .filter(|c| !c.is_income)
+            .cloned()
+            .collect();
         Self {
             currency_symbol: currency_symbol.unwrap_or_else(|_| "USD".to_string()),
             add_transaction_view: false,
-            categories: store.get_categories().unwrap_or_else(|_| vec![]),
+            all_categories,
+            categories,
             accounts: store.get_accounts().unwrap_or_else(|_| vec![]),
             form_transaction_type: widget::segmented_button::Model::builder()
                 .insert(|b| b.text(fl!("expense")).data(1u16).activate())
@@ -228,6 +236,9 @@ impl Transactions {
 
         element = element.push(Space::with_height(10));
 
+        element = element
+            .push(widget::text::text(fl!("date")))
+            .push(Space::with_height(5));
         element = element.push(date_picker(self.form_date, |date| {
             TransactionMessage::FormDateChanged(date)
         }));
@@ -307,6 +318,22 @@ impl Transactions {
             }
             TransactionMessage::FormTransactionTypeChanged(key) => {
                 self.form_transaction_type.activate(key);
+                let mut is_expense: bool = true;
+                if let Some(id) = self
+                    .form_transaction_type
+                    .data::<u16>(self.form_transaction_type.active())
+                {
+                    if id == &2 {
+                        is_expense = false;
+                    }
+                }
+
+                self.categories = self
+                    .all_categories
+                    .iter()
+                    .filter(|c| c.is_income == !is_expense)
+                    .cloned()
+                    .collect();
             }
             TransactionMessage::FormBankAccountChanged(selected) => {
                 self.form_selected_bank_account = Some(selected);
