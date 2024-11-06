@@ -351,9 +351,7 @@ impl Transactions {
                     is_expense,
                 };
                 let _ = store.create_money_transaction(&new_transaction);
-                commands.push(Task::perform(async {}, |_| {
-                    AppMessage::Transactions(TransactionMessage::UpdatePage)
-                }));
+                commands.push(Task::perform(async {}, |_| AppMessage::UpdateAllPages));
                 self.add_transaction_view = false;
             }
             TransactionMessage::CandellAddTransaction => {

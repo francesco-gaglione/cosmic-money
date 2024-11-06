@@ -265,6 +265,11 @@ impl Application for MoneyManager {
                         .update(pages::transactions::TransactionMessage::UpdatePage)
                         .map(cosmic::app::Message::App),
                 );
+                commands.push(
+                    self.statistics
+                        .update(pages::statistics::StatisticsMessage::Update)
+                        .map(cosmic::app::Message::App),
+                );
             }
             AppMessage::Import => {
                 commands.push(cosmic::command::future(

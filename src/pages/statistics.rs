@@ -1,14 +1,23 @@
+use std::collections::HashMap;
+
 use chrono::{Datelike, Duration, Local, NaiveDate};
 use cosmic::{
-    iced::{self, Alignment, Length, Padding},
-    widget::{self, column, Space},
+    iced::{
+        self,
+        alignment::{Horizontal, Vertical},
+        Alignment, Length, Padding,
+    },
+    theme::ProgressBar,
+    widget::{self, column, progress_bar, Space},
     Element, Task,
 };
 
 use crate::{
     app::{self, AppMessage},
     config::Config,
-    fl, STORE,
+    fl,
+    models::MoneyTransaction,
+    STORE,
 };
 
 #[derive(Debug, Clone)]
@@ -21,15 +30,20 @@ pub enum StatisticsMessage {
 pub struct Statistics {
     view_month: u32,
     view_year: i32,
+    distribution: HashMap<NaiveDate, f32>,
 }
 
 impl Default for Statistics {
     fn default() -> Self {
         let now = Local::now();
-        Self {
+        let mut statistics = Self {
             view_month: now.month(),
             view_year: now.year(),
-        }
+            distribution: HashMap::new(),
+        };
+        statistics.generate_distribution();
+
+        statistics
     }
 }
 
@@ -89,6 +103,75 @@ impl Statistics {
             ratio = format!("{:.2}", self.calculate_ratio())
         )));
 
+        element = element.push(Space::with_height(10));
+        element = element.push(widget::text::title4(fl!("monthly-distribution")));
+        element = element.push(Space::with_height(10));
+
+        if self.distribution.is_empty() {
+            element = element.push(widget::text::text(fl!("no-element-distribution")));
+        } else {
+            element = element
+                .push(
+                    widget::row()
+                        .push(
+                            widget::column()
+                                .spacing(5)
+                                .align_x(Alignment::Center)
+                                .push(widget::text::text("Giorno").size(16)),
+                        )
+                        .push(
+                            widget::column().spacing(5).align_x(Alignment::Center).push(
+                                widget::text::text("%")
+                                    .width(Length::Fill)
+                                    .align_x(Horizontal::Right)
+                                    .size(16),
+                            ),
+                        ),
+                )
+                .push(Space::with_height(10));
+
+            let mut sorted_daily_totals: Vec<(NaiveDate, f32)> =
+                self.distribution.clone().into_iter().collect();
+
+            sorted_daily_totals.sort_by_key(|&(date, _)| date);
+
+            for item in sorted_daily_totals {
+                element = element
+                    .push(
+                        widget::row()
+                            .spacing(15)
+                            .width(Length::Fill)
+                            .height(Length::from(40))
+                            .push(
+                                widget::column()
+                                    .width(Length::Fixed(30.))
+                                    .spacing(5)
+                                    .align_x(Alignment::Center)
+                                    .push(
+                                        widget::text::text((item.0.clone().day0() + 1).to_string())
+                                            .align_y(Vertical::Top)
+                                            .size(14),
+                                    ),
+                            )
+                            .push(widget::Space::with_width(Length::Fixed(20.0)))
+                            .push(
+                                widget::column()
+                                    .push(
+                                        progress_bar(0.0..=100.0, item.1.clone())
+                                            .height(Length::Fixed(10.0)),
+                                    )
+                                    .push(
+                                        widget::text::text(format!("{:.0}%", item.1))
+                                            .width(Length::Fill)
+                                            .align_x(Horizontal::Right)
+                                            .size(14),
+                                    ),
+                            ),
+                    )
+                    .push(Space::with_height(5));
+            }
+        }
+
         widget::scrollable(
             widget::container(element)
                 .width(iced::Length::Fill)
@@ -100,7 +183,9 @@ impl Statistics {
     pub fn update(&mut self, message: StatisticsMessage) -> Task<AppMessage> {
         let mut commands = Vec::new();
         match message {
-            StatisticsMessage::Update => {}
+            StatisticsMessage::Update => {
+                self.generate_distribution();
+            }
             StatisticsMessage::PreviousMonth => {
                 if self.view_month == 1 {
                     self.view_month = 12;
@@ -159,5 +244,41 @@ impl Statistics {
         let month_end = next_month - Duration::days(1);
 
         (month_start, month_end)
+    }
+
+    pub fn generate_distribution(&mut self) {
+        let mut store = STORE.lock().unwrap();
+        let (start_date, end_date) = self.get_month_start_and_end();
+        let transactions = store.get_money_transactions_date_range(&start_date, &end_date);
+
+        let mut daily_totals: HashMap<NaiveDate, f32> = HashMap::new();
+
+        match transactions {
+            Ok(transactions) => {
+                for transaction in &transactions {
+                    if transaction.is_expense {
+                        let date = transaction.transaction_date.date();
+                        *daily_totals.entry(date).or_insert(0.0) += transaction.amount;
+                    }
+                }
+
+                let total_spending: f32 = daily_totals.values().sum();
+
+                self.distribution = daily_totals
+                    .into_iter()
+                    .map(|(date, total)| {
+                        let percentage = if total_spending > 0.0 {
+                            (total / total_spending) * 100.0
+                        } else {
+                            0.0
+                        };
+                        (date, percentage)
+                    })
+                    .collect();
+            }
+            Err(_) => {
+                self.distribution = HashMap::new();
+            }
+        }
     }
 }

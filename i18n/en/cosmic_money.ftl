@@ -82,3 +82,5 @@ operation-cancelled = Operation cancelled
 statistics = Statistics
 ratio = Income/Expense ratio
 ratio-value = Ratio: {$ratio}
+monthly-distribution = Monthly Spending Distribution
+no-element-distribution = No element this month
