@@ -17,6 +17,7 @@ use crate::{
     config::Config,
     fl,
     models::MoneyTransaction,
+    utils::dates::get_month_date_range,
     STORE,
 };
 
@@ -208,7 +209,7 @@ impl Statistics {
 
     fn calculate_ratio(&self) -> f32 {
         let mut store = STORE.lock().unwrap();
-        let (start_date, end_date) = self.get_month_start_and_end();
+        let (start_date, end_date) = get_month_date_range(self.view_year, self.view_month);
         let transactions = store.get_money_transactions_date_range(&start_date, &end_date);
         match transactions {
             Ok(transactions) => {
@@ -230,25 +231,9 @@ impl Statistics {
         }
     }
 
-    fn get_month_start_and_end(&self) -> (NaiveDate, NaiveDate) {
-        let month_start = NaiveDate::from_ymd_opt(self.view_year, self.view_month, 1)
-            .expect("Data non valida per l'inizio del mese");
-
-        let next_month = if self.view_month == 12 {
-            NaiveDate::from_ymd_opt((self.view_month + 1) as i32, 1, 1)
-        } else {
-            NaiveDate::from_ymd_opt(self.view_year, self.view_month + 1, 1)
-        }
-        .expect("Data non valida per il primo giorno del mese successivo");
-
-        let month_end = next_month - Duration::days(1);
-
-        (month_start, month_end)
-    }
-
     pub fn generate_distribution(&mut self) {
         let mut store = STORE.lock().unwrap();
-        let (start_date, end_date) = self.get_month_start_and_end();
+        let (start_date, end_date) = get_month_date_range(self.view_year, self.view_month);
         let transactions = store.get_money_transactions_date_range(&start_date, &end_date);
 
         let mut daily_totals: HashMap<NaiveDate, f32> = HashMap::new();

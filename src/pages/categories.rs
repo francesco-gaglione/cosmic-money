@@ -1,4 +1,4 @@
-use chrono::{Datelike, Duration, Local, NaiveDate};
+use chrono::{Datelike, Local};
 use cosmic::{
     iced::{alignment::Horizontal, Alignment, Length, Padding},
     widget::{self, Space},
@@ -10,6 +10,7 @@ use crate::{
     config::Config,
     fl,
     models::{Category, NewCategory, UpdateCategory},
+    utils::dates::get_month_date_range,
     STORE,
 };
 
@@ -473,7 +474,7 @@ impl Categories {
 
     fn calculate_by_category_id(&self, category_id: i32, is_income: bool) -> f32 {
         let mut store = STORE.lock().unwrap();
-        let (start_date, end_date) = self.get_month_start_and_end();
+        let (start_date, end_date) = get_month_date_range(self.view_year, self.view_month);
         if is_income {
             match store.calculate_income_by_category(category_id, &start_date, &end_date) {
                 Ok(val) => val,
@@ -489,7 +490,7 @@ impl Categories {
 
     fn percentabe_by_category(&self, category_id: i32, is_income: bool) -> u32 {
         let mut store = STORE.lock().unwrap();
-        let (start_date, end_date) = self.get_month_start_and_end();
+        let (start_date, end_date) = get_month_date_range(self.view_year, self.view_month);
         let transactions = store
             .get_money_transactions_date_range(&start_date, &end_date)
             .unwrap_or_else(|_| vec![]);
@@ -518,21 +519,5 @@ impl Categories {
             .sum();
 
         ((category_sum / transaction_sum) * 100.) as u32
-    }
-
-    fn get_month_start_and_end(&self) -> (NaiveDate, NaiveDate) {
-        let month_start = NaiveDate::from_ymd_opt(self.view_year, self.view_month, 1)
-            .expect("Data non valida per l'inizio del mese");
-
-        let next_month = if self.view_month == 12 {
-            NaiveDate::from_ymd_opt((self.view_month + 1) as i32, 1, 1)
-        } else {
-            NaiveDate::from_ymd_opt(self.view_year, self.view_month + 1, 1)
-        }
-        .expect("Data non valida per il primo giorno del mese successivo");
-
-        let month_end = next_month - Duration::days(1);
-
-        (month_start, month_end)
     }
 }
