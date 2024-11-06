@@ -111,7 +111,7 @@ impl Accounts {
                                 .push(widget::text::text(format!(
                                     "{}: {} {}",
                                     "Balance",
-                                    self.read_account_balance(account.id),
+                                    format!("{:.2}", self.read_account_balance(account.id)),
                                     self.currency_symbol
                                 )))
                                 .width(Length::Fill),
