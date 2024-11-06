@@ -33,6 +33,7 @@ account-description = Account description
 bank-account = Bank account
 initial-value = Initial value
 no-elements = No elements in this list
+total-balance = Total balance: {$balance} {$currency}
 
 view-settings = View settings
 add-category = Add category
