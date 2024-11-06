@@ -34,6 +34,7 @@ pub struct MoneyManager {
     pub categories: pages::categories::Categories,
     pub settings: pages::settings::Settings,
     pub transactions: pages::transactions::Transactions,
+    pub statistics: pages::statistics::Statistics,
     pub welcome: pages::welcome::Welcome,
     pub toasts: widget::toaster::Toasts<AppMessage>,
 }
@@ -47,6 +48,7 @@ pub enum AppMessage {
     Categories(pages::categories::CategoriesMessage),
     Transactions(pages::transactions::TransactionMessage),
     Settings(pages::settings::SettingsMessage),
+    Statistics(pages::statistics::StatisticsMessage),
     Welcome(pages::welcome::WelcomeMessage),
 
     GoToAccounts,
@@ -137,6 +139,7 @@ impl Application for MoneyManager {
             categories: pages::categories::Categories::default(),
             settings: pages::settings::Settings::default(),
             transactions: pages::transactions::Transactions::default(),
+            statistics: pages::statistics::Statistics::default(),
             welcome: pages::welcome::Welcome::default(),
             toasts: widget::toaster::Toasts::new(AppMessage::CloseToast),
         };
@@ -215,6 +218,11 @@ impl Application for MoneyManager {
                     .update(message)
                     .map(cosmic::app::Message::App),
             ),
+            AppMessage::Statistics(message) => commands.push(
+                self.statistics
+                    .update(message)
+                    .map(cosmic::app::Message::App),
+            ),
             AppMessage::Welcome(welcome_message) => {
                 commands.push(
                     self.welcome
@@ -255,6 +263,11 @@ impl Application for MoneyManager {
                 commands.push(
                     self.transactions
                         .update(pages::transactions::TransactionMessage::UpdatePage)
+                        .map(cosmic::app::Message::App),
+                );
+                commands.push(
+                    self.statistics
+                        .update(pages::statistics::StatisticsMessage::Update)
                         .map(cosmic::app::Message::App),
                 );
             }

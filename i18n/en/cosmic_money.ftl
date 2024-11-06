@@ -42,6 +42,8 @@ category-description = Category description
 category-type = Category type
 income-categories = Income categories
 expense-categories = Expense categories
+expenses-period = Expenses by period
+income-period = Income by period
 
 transactions = Transactions
 add-transaction = Add transaction
@@ -76,3 +78,9 @@ export-error = Error happened during file export
 import-error = Error happened during file import
 import-success = Import from file completed
 operation-cancelled = Operation cancelled
+
+statistics = Statistics
+ratio = Income/Expense ratio
+ratio-value = Ratio: {$ratio}
+monthly-distribution = Monthly Spending Distribution
+no-element-distribution = No element this month

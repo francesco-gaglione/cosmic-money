@@ -77,6 +77,8 @@ fn main() -> cosmic::iced::Result {
     let applied = connection.applied_migrations();
     log::info!("Migration completed, applied: {:?}", applied);
 
-    let settings = cosmic::app::Settings::default().size(Size::new(1200., 1000.));
+    let settings = cosmic::app::Settings::default()
+        .size(Size::new(1200., 1000.))
+        .debug(false);
     cosmic::app::run::<MoneyManager>(settings, ())
 }

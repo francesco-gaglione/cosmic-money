@@ -3,3 +3,4 @@ pub mod settings;
 pub mod categories;
 pub mod transactions;
 pub mod welcome;
+pub mod statistics;
