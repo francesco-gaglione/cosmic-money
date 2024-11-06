@@ -9,11 +9,6 @@ use cosmic::{
     Element, Task,
 };
 
-use super::accounts::AccountsMessage;
-use super::categories::CategoriesMessage;
-use super::settings::SettingsMessage;
-use super::transactions::TransactionMessage;
-
 #[derive(Debug, Clone)]
 pub enum WelcomeMessage {
     CurrencyChanged(usize),

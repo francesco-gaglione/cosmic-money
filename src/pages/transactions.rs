@@ -10,6 +10,7 @@ use crate::{
     config::Config,
     fl,
     models::{Account, Category, MoneyTransaction, NewMoneyTransaction},
+    utils::dates::get_month_date_range,
     widget::date_picker::date_picker,
     STORE,
 };
@@ -26,6 +27,8 @@ pub enum TransactionMessage {
     FormDateChanged(i64),
     CandellAddTransaction,
     SubmitTransaction,
+    PreviousMonth,
+    NextMonth,
 }
 
 pub struct Transactions {
@@ -42,13 +45,20 @@ pub struct Transactions {
     form_amount: String,
     form_date: i64,
     new_transaction_amount: f32,
+    view_month: u32,
+    view_year: i32,
 }
 
 impl Default for Transactions {
     fn default() -> Self {
         let mut store = STORE.lock().unwrap();
         let config = Config::load();
-        let transactions = store.get_money_transactions().unwrap_or_else(|_| vec![]);
+
+        let now = Local::now();
+        let (start_date, end_date) = get_month_date_range(now.year(), now.month());
+        let transactions = store
+            .get_money_transactions_date_range(&start_date, &end_date)
+            .unwrap_or_else(|_| vec![]);
         let currency_symbol = store.get_currency_symbol_by_id(config.1.currency_id);
         let all_categories = store.get_categories().unwrap_or_else(|_| vec![]);
         let categories = all_categories
@@ -73,6 +83,8 @@ impl Default for Transactions {
             form_amount: "".to_string(),
             form_date: Utc::now().timestamp(),
             new_transaction_amount: 0.,
+            view_month: now.month(),
+            view_year: now.year(),
         }
     }
 }
@@ -125,6 +137,38 @@ impl Transactions {
             fl!("month-11"), // November
             fl!("month-12"), // December
         ];
+
+        element = element.push(
+            widget::column()
+                .push(
+                    widget::row()
+                        .push(
+                            widget::button::icon(widget::icon::from_name("go-previous-symbolic"))
+                                .on_press(TransactionMessage::PreviousMonth),
+                        )
+                        .push(Space::with_width(10))
+                        .push(
+                            widget::container(
+                                widget::row()
+                                    .push(widget::text::text(
+                                        month_names[self.view_month as usize - 1].clone(),
+                                    ))
+                                    .push(Space::with_width(10))
+                                    .push(widget::text::text(self.view_year.to_string())),
+                            )
+                            .padding(Padding::from(7)),
+                        )
+                        .push(Space::with_width(10))
+                        .push(
+                            widget::button::icon(widget::icon::from_name("go-next-symbolic"))
+                                .on_press(TransactionMessage::NextMonth),
+                        ),
+                )
+                .align_x(Alignment::Center)
+                .width(Length::Fill),
+        );
+
+        element = element.push(Space::with_height(10));
 
         if !self.transactions.is_empty() {
             let mut last_date: NaiveDateTime = NaiveDate::from_ymd(1970, 1, 1).and_hms(0, 0, 0);
@@ -304,8 +348,12 @@ impl Transactions {
                 log::info!("updating page");
                 let mut store = STORE.lock().unwrap();
                 let config = Config::load();
+                let (start_date, end_date) = get_month_date_range(self.view_year, self.view_month);
+
                 let currency_symbol = store.get_currency_symbol_by_id(config.1.currency_id);
-                self.transactions = store.get_money_transactions().unwrap_or_else(|_| vec![]);
+                self.transactions = store
+                    .get_money_transactions_date_range(&start_date, &end_date)
+                    .unwrap_or_else(|_| vec![]);
                 self.categories = store.get_categories().unwrap_or_else(|_| vec![]);
                 self.accounts = store.get_accounts().unwrap_or_else(|_| vec![]);
                 self.currency_symbol = currency_symbol.unwrap_or_else(|_| "USD".to_string());
@@ -396,6 +444,28 @@ impl Transactions {
             TransactionMessage::FormDateChanged(date) => {
                 log::info!("form date changed: {:?}", date);
                 self.form_date = date;
+            }
+            TransactionMessage::PreviousMonth => {
+                if self.view_month == 1 {
+                    self.view_month = 12;
+                    self.view_year -= 1;
+                } else {
+                    self.view_month -= 1;
+                }
+                commands.push(Task::perform(async {}, |_| {
+                    AppMessage::Transactions(TransactionMessage::UpdatePage)
+                }));
+            }
+            TransactionMessage::NextMonth => {
+                if self.view_month == 12 {
+                    self.view_month = 1;
+                    self.view_year += 1;
+                } else {
+                    self.view_month += 1;
+                }
+                commands.push(Task::perform(async {}, |_| {
+                    AppMessage::Transactions(TransactionMessage::UpdatePage)
+                }));
             }
         }
         Task::batch(commands)

@@ -65,16 +65,16 @@ pub fn import_from_json(url: &Url) -> Result<(), String> {
                 Ok(list) => {
                     let selected = list.iter().find(|c| c.symbol == deserialized.currency);
                     if let Some(currency) = selected {
-                        config.1.set_currency_id(&config.0.unwrap(), currency.id);
+                        let _ = config.1.set_currency_id(&config.0.unwrap(), currency.id);
                         log::info!("Currency set to ID: {}", currency.id);
                     } else {
-                        config.1.set_currency_id(&config.0.unwrap(), 0);
+                        let _ = config.1.set_currency_id(&config.0.unwrap(), 0);
                         log::warn!("Currency not found in list, setting ID to 0.");
                     }
                 }
                 Err(e) => {
                     log::error!("Error retrieving currencies: {:?}", e);
-                    config.1.set_currency_id(&config.0.unwrap(), 0);
+                    let _ = config.1.set_currency_id(&config.0.unwrap(), 0);
                     log::warn!("Setting currency ID to 0 due to error.");
                 }
             }

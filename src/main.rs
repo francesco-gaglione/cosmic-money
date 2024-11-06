@@ -21,6 +21,7 @@ mod schema;
 mod store;
 mod synchronization;
 mod widget;
+mod utils;
 
 static STORE: Lazy<Mutex<Store>> = Lazy::new(|| Mutex::new(Store::default()));
 static DATABASE_URL: &str = "cosmic-money.db";
