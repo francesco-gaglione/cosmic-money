@@ -354,7 +354,14 @@ impl Transactions {
                 self.transactions = store
                     .get_money_transactions_date_range(&start_date, &end_date)
                     .unwrap_or_else(|_| vec![]);
-                self.categories = store.get_categories().unwrap_or_else(|_| vec![]);
+                let all_categories = store.get_categories().unwrap_or_else(|_| vec![]);
+                self.categories = all_categories
+                    .iter()
+                    .filter(|c| !c.is_income)
+                    .cloned()
+                    .collect();
+                self.form_transaction_type.activate_position(0);
+
                 self.accounts = store.get_accounts().unwrap_or_else(|_| vec![]);
                 self.currency_symbol = currency_symbol.unwrap_or_else(|_| "USD".to_string());
             }
@@ -435,11 +442,17 @@ impl Transactions {
                 let _ = store.create_money_transaction(&new_transaction);
                 commands.push(Task::perform(async {}, |_| AppMessage::UpdateAllPages));
                 self.add_transaction_view = false;
+                self.form_amount = "".to_string();
+                self.form_note = "".to_string();
+                self.form_selectected_category = Some(0);
+                self.form_selected_bank_account = Some(0);
             }
             TransactionMessage::CandellAddTransaction => {
                 self.add_transaction_view = false;
                 self.form_amount = "".to_string();
                 self.form_note = "".to_string();
+                self.form_selectected_category = Some(0);
+                self.form_selected_bank_account = Some(0);
             }
             TransactionMessage::FormDateChanged(date) => {
                 log::info!("form date changed: {:?}", date);
