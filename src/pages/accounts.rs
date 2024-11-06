@@ -1,5 +1,5 @@
 use cosmic::{
-    iced::{self, Length, Padding},
+    iced::{self, alignment::Vertical, Length, Padding},
     widget::{self, column, settings, Space},
     Element, Task,
 };
@@ -75,7 +75,17 @@ impl Default for Accounts {
 
 impl Accounts {
     pub fn view<'a>(&'a self) -> Element<'a, AccountsMessage> {
-        let mut col = column::<AccountsMessage>().push(widget::text::title1(fl!("page_accounts")));
+        let mut col = column::<AccountsMessage>().push(
+            widget::row()
+                .align_y(Vertical::Center)
+                .push(widget::text::title1(fl!("page_accounts")))
+                .push(widget::Space::with_width(Length::Fill))
+                .push(widget::text::title4(fl!(
+                    "total-balance",
+                    balance = format!("{:.2}", self.calc_total_balance()),
+                    currency = self.currency_symbol.clone()
+                ))),
+        );
 
         col = col.push(
             widget::container(
@@ -392,5 +402,12 @@ impl Accounts {
         } else {
             0.
         }
+    }
+
+    fn calc_total_balance(&self) -> f32 {
+        self.accounts
+            .iter()
+            .map(|a| self.read_account_balance(a.id))
+            .sum()
     }
 }
