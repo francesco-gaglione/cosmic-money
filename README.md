@@ -65,12 +65,6 @@ Here’s a preview of **Cosmic Money**:
 
 Contributions are welcome! A contribution guide will be available soon.
 
-## Future Goals
-
-1. Statistics
-2. Data Import/Export
-3. AI-Powered Analytics
-
 ## License
 
 Distributed under the **MIT** license. See the [LICENSE](./LICENSE) file for more details.
