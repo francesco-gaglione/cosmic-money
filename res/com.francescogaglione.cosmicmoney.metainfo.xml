@@ -28,6 +28,16 @@
   </provides>
   <content_rating type="oars-1.1" />
   <releases>
+      <release version="0.2.0" date="2024-10-30">
+        <description>
+            <p>- Data import/export</p>
+            <p>- Statistics page</p>
+            <p>- Total accounts balance</p>
+            <p>- Transactions by period</p>
+            <p>- Fix reset transaction form on submit</p>
+        </description>
+      </release>
+
       <release version="0.1.1" date="2024-10-30">
         <description>
             <p>- fix new transaction balance input wrong behaviour</p>
