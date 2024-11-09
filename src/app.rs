@@ -371,11 +371,13 @@ impl MoneyManager {
     pub fn about(&self) -> Element<AppMessage> {
         let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
 
-        let icon = widget::svg(widget::svg::Handle::from_memory(
+        let icon = widget::image(widget::image::Handle::from_bytes(
             &include_bytes!(
                 "../res/icons/hicolor/128x128/apps/com.francescogaglione.cosmicmoney.png"
             )[..],
-        ));
+        ))
+        .height(Length::Fixed(128.))
+        .height(Length::Fixed(128.));
 
         let title = widget::text::title3(fl!("app-title"));
 
@@ -391,6 +393,7 @@ impl MoneyManager {
             .push(link)
             .align_x(Alignment::Center)
             .spacing(space_xxs)
+            .width(Length::Fill)
             .into()
     }
 
