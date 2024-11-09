@@ -349,7 +349,7 @@ impl Accounts {
                 let account = self.accounts.clone().into_iter().find(|a| a.id == id);
                 if let Some(account) = account {
                     self.edit_account_name = account.name;
-                    self.edit_account_balance = account.initial_balance.to_string();
+                    self.edit_account_balance = self.read_account_balance(account.id).to_string();
                     self.edit_account_description = account.account_description;
                 }
             }
@@ -371,25 +371,33 @@ impl Accounts {
             AccountsMessage::EditAccountSubmit => {
                 let id = self.editing_account.unwrap();
                 let new_balance = self.edit_account_balance.parse::<f32>().unwrap();
-                let initial_balance = self.read_account_balance(id);
-                let difference: f32 = new_balance - initial_balance;
-                let update_account = UpdateAccount {
-                    id,
-                    name: self.edit_account_name.clone(),
-                    initial_balance: initial_balance + difference,
-                    account_description: self.edit_account_description.clone(),
-                };
-                let mut store = STORE.lock().unwrap();
-                let _ = store.update_account(&update_account);
-                commands.push(Task::perform(async {}, |_| {
-                    AppMessage::Accounts(AccountsMessage::Update)
-                }));
-                commands.push(Task::perform(async {}, |_| {
-                    AppMessage::Transactions(TransactionMessage::UpdatePage)
-                }));
-                commands.push(Task::perform(async {}, |_| {
-                    AppMessage::Accounts(AccountsMessage::CloseEditAccount)
-                }));
+                let current_balance = self.read_account_balance(id);
+                let account = self.accounts.iter().find(|a| a.id == id);
+                match account {
+                    Some(account) => {
+                        let difference: f32 = new_balance - current_balance;
+                        let update_account = UpdateAccount {
+                            id,
+                            name: self.edit_account_name.clone(),
+                            initial_balance: account.initial_balance + difference,
+                            account_description: self.edit_account_description.clone(),
+                        };
+                        let mut store = STORE.lock().unwrap();
+                        let _ = store.update_account(&update_account);
+                        commands.push(Task::perform(async {}, |_| {
+                            AppMessage::Accounts(AccountsMessage::Update)
+                        }));
+                        commands.push(Task::perform(async {}, |_| {
+                            AppMessage::Transactions(TransactionMessage::UpdatePage)
+                        }));
+                        commands.push(Task::perform(async {}, |_| {
+                            AppMessage::Accounts(AccountsMessage::CloseEditAccount)
+                        }));
+                    }
+                    None => {
+                        log::error!("Initial balance not found");
+                    }
+                }
             }
         }
         Task::batch(commands)
