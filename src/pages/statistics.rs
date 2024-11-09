@@ -11,12 +11,7 @@ use cosmic::{
     Element, Task,
 };
 
-use crate::{
-    app::{AppMessage},
-    fl,
-    utils::dates::get_month_date_range,
-    STORE,
-};
+use crate::{app::AppMessage, fl, utils::dates::get_month_date_range, STORE};
 
 #[derive(Debug, Clone)]
 pub enum StatisticsMessage {
@@ -179,7 +174,7 @@ impl Statistics {
     }
 
     pub fn update(&mut self, message: StatisticsMessage) -> Task<AppMessage> {
-        let commands = Vec::new();
+        let mut commands = Vec::new();
         match message {
             StatisticsMessage::Update => {
                 self.generate_distribution();
@@ -191,6 +186,7 @@ impl Statistics {
                 } else {
                     self.view_month -= 1;
                 }
+                self.generate_distribution();
             }
             StatisticsMessage::NextMonth => {
                 if self.view_month == 12 {
@@ -199,6 +195,7 @@ impl Statistics {
                 } else {
                     self.view_month += 1;
                 }
+                self.generate_distribution();
             }
         }
         Task::batch(commands)
