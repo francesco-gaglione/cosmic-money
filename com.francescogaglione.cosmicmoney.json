@@ -6,7 +6,7 @@
   "base-version": "stable",
   "sdk": "org.freedesktop.Sdk",
   "sdk-extensions": [
-      "org.freedesktop.Sdk.Extension.rust-stable"
+    "org.freedesktop.Sdk.Extension.rust-stable"
   ],
   "command": "cosmic_money",
   "finish-args": [
@@ -16,7 +16,7 @@
     "--socket=wayland",
     "--device=dri",
     "--talk-name=com.system76.CosmicSettingsDaemon",
-    "--filesystem=xdg-config/cosmic:create"
+    "--filesystem=xdg-config/cosmic:rw"
   ],
   "build-options": {
     "append-path": "/usr/lib/sdk/rust-stable/bin",
@@ -50,7 +50,7 @@
         {
           "type": "git",
           "url": "https://github.com/francesco-gaglione/cosmic-money.git",
-          "commit": "14e90d09b8ac51aff42e3c840f0213d41405011a"
+          "commit": "d9c185a09cad72f5c3d64e37bb5d12e01654a0ce"
         },
         "cargo-sources.json"
       ]
