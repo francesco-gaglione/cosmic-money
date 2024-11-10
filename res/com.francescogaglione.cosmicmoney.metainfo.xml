@@ -28,6 +28,13 @@
   </provides>
   <content_rating type="oars-1.1" />
   <releases>
+      <release version="0.2.1" date="2024-10-30">
+        <description>
+          <p>- Fix edit account balance</p>
+          <p>- Fix statistic distribution update</p>
+        </description>
+      </release>
+
       <release version="0.2.0" date="2024-10-30">
         <description>
             <p>- Data import/export</p>
