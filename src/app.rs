@@ -13,7 +13,8 @@ use cosmic::cosmic_config::Update;
 use cosmic::cosmic_theme::ThemeMode;
 use cosmic::dialog::ashpd::url::Url;
 use cosmic::dialog::file_chooser::{self, FileFilter};
-use cosmic::iced::{Alignment, Length, Subscription};
+use cosmic::iced::{Alignment, Length, Padding, Subscription};
+use cosmic::widget::about::About;
 use cosmic::widget::{self, menu, nav_bar, ToastId};
 use cosmic::{cosmic_config, cosmic_theme, theme, Application, ApplicationExt, Element};
 use futures_util::FutureExt;
@@ -32,6 +33,7 @@ pub struct MoneyManager {
     key_binds: HashMap<menu::KeyBind, MenuAction>,
     /// A model that contains all of the pages assigned to the nav bar panel.
     nav: nav_bar::Model,
+    about: About,
 
     pub accounts: pages::accounts::Accounts,
     pub categories: pages::categories::Categories,
@@ -134,8 +136,27 @@ impl Application for MoneyManager {
             core.nav_bar_set_toggled(false);
         }
 
+        let about = cosmic::widget::about::About::default()
+            .name(fl!("app-title"))
+            .icon(Self::APP_ID)
+            .version("0.2.1")
+            .author("Francesco Pio Gaglione")
+            .license("GPL-3.0")
+            .links([
+                (
+                    fl!("support"),
+                    "https://github.com/francesco-gaglione/cosmic-money/issues",
+                ),
+                (
+                    fl!("repository"),
+                    "https://github.com/francesco-gaglione/cosmic-money",
+                ),
+            ])
+            .developers([("Francesco Pio Gaglione", "francesco.gaglione.p@gmail.com")]);
+
         let mut app = MoneyManager {
             core,
+            about,
             context_page: ContextPage::default(),
             key_binds: HashMap::new(),
             nav,
@@ -405,13 +426,16 @@ impl Application for MoneyManager {
         Subscription::batch(subscriptions)
     }
 
-    fn context_drawer(&self) -> Option<Element<Self::Message>> {
+    fn context_drawer(&self) -> Option<Element<AppMessage>> {
         if !self.core.window.show_context {
             return None;
         }
 
         Some(match self.context_page {
-            ContextPage::About => self.about(),
+            ContextPage::About => widget::column()
+                .push(widget::about(&self.about, AppMessage::LaunchUrl))
+                .padding(Padding::new(10.))
+                .into(),
         })
     }
 
@@ -424,35 +448,6 @@ impl Application for MoneyManager {
 }
 
 impl MoneyManager {
-    pub fn about(&self) -> Element<AppMessage> {
-        let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
-
-        let icon = widget::image(widget::image::Handle::from_bytes(
-            &include_bytes!(
-                "../res/icons/hicolor/128x128/apps/com.francescogaglione.cosmicmoney.png"
-            )[..],
-        ))
-        .height(Length::Fixed(128.))
-        .height(Length::Fixed(128.));
-
-        let title = widget::text::title3(fl!("app-title"));
-
-        let link = widget::button::link("Home")
-            .on_press(AppMessage::LaunchUrl(
-                "https://github.com/francesco-gaglione/cosmic-money".to_string(),
-            ))
-            .padding(0);
-
-        widget::column()
-            .push(icon)
-            .push(title)
-            .push(link)
-            .align_x(Alignment::Center)
-            .spacing(space_xxs)
-            .width(Length::Fill)
-            .into()
-    }
-
     pub fn update_title(&mut self) -> Task<AppMessage> {
         let mut window_title = fl!("app-title");
 

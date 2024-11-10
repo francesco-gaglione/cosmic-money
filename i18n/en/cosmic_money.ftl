@@ -1,6 +1,8 @@
 app-title = Cosmic money
 about = About
 view = View
+support = Support
+repository = Repository
 
 save = Save
 cancel = Cancel
