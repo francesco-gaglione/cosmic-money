@@ -1,12 +1,15 @@
-<p align="center">
-  <img src="https://github.com/francesco-gaglione/cosmic-money/blob/main/res/icons/hicolor/256x256/apps/com.francescogaglione.cosmicmoney.png?raw=true" alt="Logo" width="200px">
-</p>
+<div align="center">
+   <br>
+   <img src="res/icons/hicolor/256x256/apps/com.francescogaglione.cosmicmoney.png" width="150" />
+   <h1>Cosmic Money</h1>
 
-<a href='https://flathub.org/apps/com.francescogaglione.cosmicmoney'>
-   <img width='200' alt='Get it on Flathub' src='https://flathub.org/api/badge?locale=en'/>
- </a>
+![window-light.png](https://github.com/francesco-gaglione/cosmic-money/blob/main/res/icons/hicolor/256x256/apps/com.francescogaglione.cosmicmoney.png?raw=true#gh-light-mode-only)
+![window-dark.png](https://github.com/francesco-gaglione/cosmic-money/blob/main/res/icons/hicolor/256x256/apps/com.francescogaglione.cosmicmoney.png?raw=true#gh-dark-mode-only)
 
-# Cosmic Money
+  <a href='https://flathub.org/apps/com.francescogaglione.cosmicmoney'>
+    <img width='200' alt='Get it on Flathub' src='https://flathub.org/api/badge?locale=en'/>
+  </a>
+</div>
 
 **Cosmic Money** is a simple and intuitive personal finance manager for the **Cosmic** desktop environment.
 Designed to help you keep track of your finances, Cosmic Money allows you to manage accounts and transactions, view summaries, and monitor balances.
