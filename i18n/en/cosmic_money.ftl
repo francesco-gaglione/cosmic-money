@@ -14,11 +14,29 @@ page-welcome = Welcome
 welcome-title-message = Welcome to Cosmic Money!
 welcome-message = Setup your app
 currency-message = Choose your default currency
+use-suggested = Use suggested
 welcome-income-categories = Income categories
 welcome-expense-categories = Expense categories
 welcome-initial-accounts = Initial accounts
 welcome-import-message = If you have a data file you can import it
 setup = Setup
+
+salary = Salary
+other = Other
+groceries = Groceries
+restaurant = Restaurant
+leisure = Leisure
+transport = Transport
+health = Health
+gifts = Gifts
+finance = Finance
+shopping = Shopping
+home = Home
+subscriptions = Subscriptions
+travel = Travel
+
+bank-account = Bank account
+cash = Cash
 
 page_accounts = Accounts
 page_categories = Categories

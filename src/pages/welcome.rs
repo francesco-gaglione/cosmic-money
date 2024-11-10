@@ -28,6 +28,8 @@ pub enum WelcomeMessage {
     Setup,
     Import,
     ImportCompleted,
+    UseSuggestedCategories(bool),
+    UseSuggestedAccounts,
 }
 
 pub struct Welcome {
@@ -215,9 +217,29 @@ impl Welcome {
                 widget::column()
                     .push(Space::with_height(5))
                     .push(
-                        widget::button::text(fl!("add"))
-                            .class(widget::button::ButtonClass::Suggested)
-                            .on_press(WelcomeMessage::AddCategoryToggle(is_income)),
+                        widget::row()
+                            .push(
+                                widget::button::text(fl!("add"))
+                                    .class(widget::button::ButtonClass::Suggested)
+                                    .on_press(WelcomeMessage::AddCategoryToggle(is_income)),
+                            )
+                            .push(Space::with_width(10))
+                            .push_maybe(
+                                match (
+                                    is_income,
+                                    self.income_categories.is_empty(),
+                                    self.expense_categories.is_empty(),
+                                ) {
+                                    (true, true, _) | (false, _, true) => Some(
+                                        widget::button::text(fl!("use-suggested"))
+                                            .class(widget::button::ButtonClass::Suggested)
+                                            .on_press(WelcomeMessage::UseSuggestedCategories(
+                                                is_income,
+                                            )),
+                                    ),
+                                    _ => None,
+                                },
+                            ),
                     )
                     .align_x(Alignment::Center)
                     .width(Length::Fill),
@@ -326,9 +348,18 @@ impl Welcome {
                 widget::column()
                     .push(Space::with_height(5))
                     .push(
-                        widget::button::text(fl!("add"))
-                            .on_press(WelcomeMessage::AddAccountToggle)
-                            .class(widget::button::ButtonClass::Suggested),
+                        widget::row()
+                            .push(
+                                widget::button::text(fl!("add"))
+                                    .on_press(WelcomeMessage::AddAccountToggle)
+                                    .class(widget::button::ButtonClass::Suggested),
+                            )
+                            .push(Space::with_width(10))
+                            .push(
+                                widget::button::text(fl!("use-suggested"))
+                                    .on_press(WelcomeMessage::UseSuggestedAccounts)
+                                    .class(widget::button::ButtonClass::Suggested),
+                            ),
                     )
                     .align_x(Alignment::Center)
                     .width(Length::Fill),
@@ -518,6 +549,89 @@ impl Welcome {
 
                 commands.push(Task::perform(async {}, |_| AppMessage::GoToAccounts));
                 commands.push(Task::perform(async {}, |_| AppMessage::UpdateAllPages));
+            }
+            WelcomeMessage::UseSuggestedCategories(is_income) => {
+                log::info!("use suggested");
+                if is_income {
+                    self.income_categories.push(NewCategory {
+                        name: fl!("salary"),
+                        is_income: true,
+                        category_description: "".to_string(),
+                    });
+                    self.income_categories.push(NewCategory {
+                        name: fl!("other"),
+                        is_income: true,
+                        category_description: "".to_string(),
+                    });
+                } else {
+                    self.expense_categories.push(NewCategory {
+                        name: fl!("groceries"),
+                        is_income: false,
+                        category_description: "".to_string(),
+                    });
+                    self.expense_categories.push(NewCategory {
+                        name: fl!("restaurant"),
+                        is_income: false,
+                        category_description: "".to_string(),
+                    });
+                    self.expense_categories.push(NewCategory {
+                        name: fl!("leisure"),
+                        is_income: false,
+                        category_description: "".to_string(),
+                    });
+                    self.expense_categories.push(NewCategory {
+                        name: fl!("transport"),
+                        is_income: false,
+                        category_description: "".to_string(),
+                    });
+                    self.expense_categories.push(NewCategory {
+                        name: fl!("health"),
+                        is_income: false,
+                        category_description: "".to_string(),
+                    });
+                    self.expense_categories.push(NewCategory {
+                        name: fl!("gifts"),
+                        is_income: false,
+                        category_description: "".to_string(),
+                    });
+                    self.expense_categories.push(NewCategory {
+                        name: fl!("finance"),
+                        is_income: false,
+                        category_description: "".to_string(),
+                    });
+                    self.expense_categories.push(NewCategory {
+                        name: fl!("shopping"),
+                        is_income: false,
+                        category_description: "".to_string(),
+                    });
+                    self.expense_categories.push(NewCategory {
+                        name: fl!("home"),
+                        is_income: false,
+                        category_description: "".to_string(),
+                    });
+                    self.expense_categories.push(NewCategory {
+                        name: fl!("subscriptions"),
+                        is_income: false,
+                        category_description: "".to_string(),
+                    });
+                    self.expense_categories.push(NewCategory {
+                        name: fl!("travel"),
+                        is_income: false,
+                        category_description: "".to_string(),
+                    });
+                }
+            }
+            WelcomeMessage::UseSuggestedAccounts => {
+                self.accounts.push(NewAccount {
+                    name: fl!("bank-account"),
+                    initial_balance: 0.,
+                    account_description: "".to_string(),
+                });
+                self.accounts.push(NewAccount {
+                    name: fl!("cash"),
+                    initial_balance: 0.,
+                    account_description: "".to_string(),
+                });
             }
         }
         Task::batch(commands)
