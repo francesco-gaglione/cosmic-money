@@ -2,6 +2,10 @@
   <img src="https://github.com/francesco-gaglione/cosmic-money/blob/main/res/icons/hicolor/256x256/apps/com.francescogaglione.cosmicmoney.png?raw=true" alt="Logo" width="200px">
 </p>
 
+<a href='https://flathub.org/apps/com.francescogaglione.cosmicmoney'>
+   <img width='200' alt='Get it on Flathub' src='https://flathub.org/api/badge?locale=en'/>
+ </a>
+
 # Cosmic Money
 
 **Cosmic Money** is a simple and intuitive personal finance manager for the **Cosmic** desktop environment.
