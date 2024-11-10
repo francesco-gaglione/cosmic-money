@@ -20,8 +20,8 @@ mod pages;
 mod schema;
 mod store;
 mod synchronization;
-mod widget;
 mod utils;
+mod widget;
 
 static STORE: Lazy<Mutex<Store>> = Lazy::new(|| Mutex::new(Store::default()));
 static DATABASE_URL: &str = "cosmic-money.db";
@@ -80,6 +80,8 @@ fn main() -> cosmic::iced::Result {
 
     let settings = cosmic::app::Settings::default()
         .size(Size::new(1200., 1000.))
+        .theme(cosmic::theme::system_preference())
         .debug(false);
+
     cosmic::app::run::<MoneyManager>(settings, ())
 }
