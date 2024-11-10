@@ -1,18 +1,21 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
+use std::any::TypeId;
 use std::collections::HashMap;
 
-use crate::config::Config;
+use crate::config::{Config, CONFIG_VERSION};
 use crate::core::nav::NavPage;
 use crate::synchronization::export::export_to_folder;
 use crate::synchronization::import::import_from_json;
 use crate::{fl, pages};
 use cosmic::app::{self, Core, Task};
+use cosmic::cosmic_config::Update;
+use cosmic::cosmic_theme::ThemeMode;
 use cosmic::dialog::ashpd::url::Url;
 use cosmic::dialog::file_chooser::{self, FileFilter};
-use cosmic::iced::{Alignment, Length};
+use cosmic::iced::{Alignment, Length, Subscription};
 use cosmic::widget::{self, menu, nav_bar, ToastId};
-use cosmic::{cosmic_theme, theme, Application, ApplicationExt, Element};
+use cosmic::{cosmic_config, cosmic_theme, theme, Application, ApplicationExt, Element};
 use futures_util::FutureExt;
 
 pub const QUALIFIER: &str = "com";
@@ -43,6 +46,7 @@ pub struct MoneyManager {
 pub enum AppMessage {
     LaunchUrl(String),
     ToggleContextPage(ContextPage),
+    SystemThemeModeChange,
 
     Accounts(pages::accounts::AccountsMessage),
     Categories(pages::categories::CategoriesMessage),
@@ -345,8 +349,60 @@ impl Application for MoneyManager {
                     }
                 }
             }
+            AppMessage::SystemThemeModeChange => {
+                commands.push(app::command::set_theme(cosmic::theme::active()));
+            }
         }
         Task::batch(commands)
+    }
+
+    fn subscription(&self) -> cosmic::iced::Subscription<Self::Message> {
+        struct ConfigSubscription;
+        struct ThemeSubscription;
+
+        let subscriptions = vec![
+            //event::listen_with(|event, _status, _window_id| match event {
+            //    Event::Keyboard(KeyEvent::KeyPressed { key, modifiers, .. }) => {
+            //        Some(Message::Key(modifiers, key))
+            //    }
+            //    Event::Keyboard(KeyEvent::ModifiersChanged(modifiers)) => {
+            //        Some(Message::Modifiers(modifiers))
+            //    }
+            //    _ => None,
+            //}),
+            cosmic_config::config_subscription(
+                TypeId::of::<ConfigSubscription>(),
+                Self::APP_ID.into(),
+                CONFIG_VERSION,
+            )
+            .map(|update: Update<ThemeMode>| {
+                if !update.errors.is_empty() {
+                    log::info!(
+                        "errors loading config {:?}: {:?}",
+                        update.keys,
+                        update.errors
+                    );
+                }
+                AppMessage::SystemThemeModeChange
+            }),
+            cosmic_config::config_subscription::<_, cosmic_theme::ThemeMode>(
+                TypeId::of::<ThemeSubscription>(),
+                cosmic_theme::THEME_MODE_ID.into(),
+                cosmic_theme::ThemeMode::version(),
+            )
+            .map(|update: Update<ThemeMode>| {
+                if !update.errors.is_empty() {
+                    log::info!(
+                        "errors loading theme mode {:?}: {:?}",
+                        update.keys,
+                        update.errors
+                    );
+                }
+                AppMessage::SystemThemeModeChange
+            }),
+        ];
+
+        Subscription::batch(subscriptions)
     }
 
     fn context_drawer(&self) -> Option<Element<Self::Message>> {
