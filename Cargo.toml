@@ -51,6 +51,7 @@ features = [
     # GPU-accelerated rendering
     "wgpu",
     "xdg-portal",
+    "desktop",
 ]
 
 [dependencies.i18n-embed]
