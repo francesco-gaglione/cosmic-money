@@ -1,6 +1,8 @@
 app-title = Cosmic money
 about = Om
 view = Visa
+support = Support
+repository = Förråd
 
 save = Spara
 cancel = Avbryt
@@ -14,9 +16,26 @@ welcome-message = Konfigurera ditt program
 currency-message = Välj din standard valuta
 welcome-income-categories = Inkomstkategorier
 welcome-expense-categories = Utgiftskategorier
+use-suggested = Använd rekommenderad
 welcome-initial-accounts = Inledande konton
 welcome-import-message = Om du har en datafil kan du importera den
 setup = Ställ in
+
+salary = Lön
+other = Annat
+groceries = Livsmedel
+restaurant = Restaurang
+leisure = Fritid
+transport = Transport
+health = Hälsa
+gifts = Gåvor
+finance = Finans
+shopping = Shopping
+home = Hem
+subscriptions = Prenumerationer
+travel = Resa
+bank-account = Bankkonto
+cash = Kontanter
 
 page_accounts = Konton
 page_categories = Kategorier
