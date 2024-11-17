@@ -46,6 +46,7 @@ page_settings = Settings
 balance = Balance
 description = Description
 
+# Account page
 add-account = Add account
 new-account = New account
 account-name = Account name
@@ -54,6 +55,10 @@ bank-account = Bank account
 initial-value = Initial value
 no-elements = No elements in this list
 total-balance = Total balance: {$balance} {$currency}
+transfer = Money transfer
+from = From:
+to = To:
+confirm = Confirm
 
 view-settings = View settings
 add-category = Add category
@@ -66,7 +71,9 @@ expense-categories = Expense categories
 expenses-period = Expenses by period
 income-period = Income by period
 
+# Transactios page
 transactions = Transactions
+transfers = Transfers
 add-transaction = Add transaction
 category = Category
 amount = Amount

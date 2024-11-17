@@ -1,0 +1,9 @@
+
+CREATE TABLE account_transfer (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  from_account INTEGER NOT NULL,
+  to_account INTEGER NOT NULL,
+  transfer_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  description VARCHAR,
+  amount REAL NOT NULL
+);
