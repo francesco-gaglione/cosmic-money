@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
+use core::localization;
 use std::{path::PathBuf, sync::Mutex};
 
 use app::MoneyManager;
@@ -77,6 +78,9 @@ fn main() -> cosmic::iced::Result {
     run_migration(&mut connection);
     let applied = connection.applied_migrations();
     log::info!("Migration completed, applied: {:?}", applied);
+
+    let requested_languages = i18n_embed::DesktopLanguageRequester::requested_languages();
+    localization::init(&requested_languages);
 
     let settings = cosmic::app::Settings::default()
         .size(Size::new(1200., 1000.))
