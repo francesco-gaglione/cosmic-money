@@ -24,6 +24,7 @@
     </screenshot>
   </screenshots>
   <provides>
+      <id>com.system76.CosmicApplication</id>
       <binary>cosmic_money</binary>
   </provides>
   <content_rating type="oars-1.1" />
