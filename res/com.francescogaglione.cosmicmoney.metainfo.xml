@@ -29,6 +29,15 @@
   </provides>
   <content_rating type="oars-1.1" />
   <releases>
+      <release version="0.3.0" date="2024-11-17">
+        <description>
+          <p>- Swedish translation</p>
+          <p>- New about section</p>
+          <p>- Suggested settings in welcome page</p>
+          <p>- Transfer money between account</p>
+          <p>- Fix localization and italian translation</p>
+        </description>
+      </release>
       <release version="0.2.1" date="2024-10-30">
         <description>
           <p>- Fix edit account balance</p>
