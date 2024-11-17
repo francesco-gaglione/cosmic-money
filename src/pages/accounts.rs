@@ -1,3 +1,4 @@
+use chrono::{NaiveDateTime, Utc};
 use cosmic::{
     iced::{self, alignment::Vertical, Length, Padding},
     widget::{self, column, settings, Space},
@@ -8,7 +9,8 @@ use crate::{
     app::AppMessage,
     config::Config,
     fl,
-    models::{Account, NewAccount, UpdateAccount},
+    models::{Account, NewAccount, NewAccountTransfer, UpdateAccount},
+    widget::date_picker::date_picker,
     STORE,
 };
 
@@ -18,6 +20,7 @@ use super::transactions::TransactionMessage;
 pub enum AccountsMessage {
     Update,
     AddAccountView,
+    TransferMoneyView,
     CancelNewBankAccount,
     SubmitNewBankAccount,
     EditAccount(i32),
@@ -29,12 +32,20 @@ pub enum AccountsMessage {
     EditAccountSubmit,
     NewBankAccountNameChanged(String),
     NewBankAccountInitialValueChanged(String),
+    TransferFromAccountChanged(usize),
+    TransferToAccountChanged(usize),
+    TransferAmountChanged(String),
+    TransferDescriptionChanged(String),
+    TransferSubmitted,
+    TransferCancel,
+    TransferDateChanged(i64),
 }
 
 pub struct Accounts {
     currency_symbol: String,
     accounts: Vec<Account>,
     add_account_view_visible: bool,
+    money_transfer_view_visible: bool,
     form_new_account_name_value: String,
     form_new_account_initial_value: String,
     new_account_initial_value: f32,
@@ -43,6 +54,12 @@ pub struct Accounts {
     edit_account_balance: String,
     edit_account_description: String,
     editing_account: Option<i32>,
+    transfer_from_account: Option<usize>,
+    transfer_to_account: Option<usize>,
+    transfer_form_amount: String,
+    transfer_description: String,
+    transfer_amount: f32,
+    transfer_date: i64,
 }
 
 impl Default for Accounts {
@@ -61,14 +78,21 @@ impl Default for Accounts {
                 Vec::new()
             },
             add_account_view_visible: false,
+            money_transfer_view_visible: false,
             form_new_account_name_value: fl!("bank-account"),
-            form_new_account_initial_value: "".to_string(),
-            new_account_description: "".to_string(),
+            form_new_account_initial_value: String::default(),
+            new_account_description: String::default(),
             new_account_initial_value: 0.,
             editing_account: None,
-            edit_account_name: "".to_string(),
-            edit_account_balance: "".to_string(),
-            edit_account_description: "".to_string(),
+            edit_account_name: String::default(),
+            edit_account_balance: String::default(),
+            edit_account_description: String::default(),
+            transfer_from_account: Some(0),
+            transfer_to_account: Some(1),
+            transfer_amount: 0.,
+            transfer_form_amount: String::default(),
+            transfer_date: Utc::now().timestamp(),
+            transfer_description: String::default(),
         }
     }
 }
@@ -89,8 +113,19 @@ impl Accounts {
 
         col = col.push(
             widget::container(
-                cosmic::widget::button::text(fl!("add-account"))
-                    .on_press(AccountsMessage::AddAccountView),
+                widget::column()
+                    .push(
+                        cosmic::widget::button::text(fl!("add-account"))
+                            .on_press(AccountsMessage::AddAccountView),
+                    )
+                    .push_maybe(if self.accounts.len() > 1 {
+                        Some(
+                            cosmic::widget::button::text(fl!("transfer"))
+                                .on_press(AccountsMessage::TransferMoneyView),
+                        )
+                    } else {
+                        None
+                    }),
             )
             .width(iced::Length::Fill)
             .align_x(iced::alignment::Horizontal::Right),
@@ -98,6 +133,10 @@ impl Accounts {
 
         if self.add_account_view_visible {
             col = col.push(self.add_account_view())
+        }
+
+        if self.money_transfer_view_visible {
+            col = col.push(self.transfer_money_view())
         }
 
         if self.accounts.len() > 0 {
@@ -221,6 +260,7 @@ impl Accounts {
             widget::container(
                 widget::column()
                     .push(widget::text::title3(fl!("new-account")))
+                    .push(Space::with_height(5))
                     .push(
                         widget::row()
                             .push(
@@ -294,6 +334,78 @@ impl Accounts {
         element.into()
     }
 
+    fn transfer_money_view<'a>(&'a self) -> Element<'a, AccountsMessage> {
+        let mut element = widget::column();
+
+        element = element.push(Space::with_height(10));
+
+        element = element.push(
+            widget::container(
+                widget::column()
+                    .push(widget::text::title3(fl!("transfer")))
+                    .push(Space::with_height(5))
+                    .push(
+                        widget::row()
+                            .push(widget::text::text(fl!("from")))
+                            .push(Space::with_width(5))
+                            .push(widget::dropdown(
+                                &self.accounts,
+                                self.transfer_from_account,
+                                AccountsMessage::TransferFromAccountChanged,
+                            ))
+                            .push(Space::with_width(30))
+                            .push(widget::text::text(fl!("to")))
+                            .push(Space::with_width(5))
+                            .push(widget::dropdown(
+                                &self.accounts,
+                                self.transfer_to_account,
+                                AccountsMessage::TransferToAccountChanged,
+                            ))
+                            .align_y(Vertical::Center),
+                    )
+                    .push(Space::with_height(5))
+                    .push(date_picker(self.transfer_date, |date| {
+                        AccountsMessage::TransferDateChanged(date)
+                    }))
+                    .push(Space::with_height(5))
+                    .push(widget::text::text(fl!("amount")))
+                    .push(
+                        widget::text_input(fl!("amount"), &self.transfer_form_amount)
+                            .width(Length::Fill)
+                            .on_input(AccountsMessage::TransferAmountChanged),
+                    )
+                    .push(Space::with_height(5))
+                    .push(widget::text::text(fl!("description")))
+                    .push(
+                        widget::text_input(fl!("description"), &self.transfer_description)
+                            .width(Length::Fill)
+                            .on_input(AccountsMessage::TransferDescriptionChanged),
+                    )
+                    .push(Space::with_height(10))
+                    .push(
+                        widget::row()
+                            .push(
+                                widget::button::suggested(fl!("confirm"))
+                                    .on_press(AccountsMessage::TransferSubmitted),
+                            )
+                            .push(Space::with_width(10))
+                            .push(
+                                widget::button::destructive(fl!("cancel"))
+                                    .on_press(AccountsMessage::TransferCancel),
+                            ),
+                    )
+                    .width(Length::Fill),
+            )
+            .width(Length::Fill)
+            .padding(Padding::new(10.))
+            .class(cosmic::theme::Container::Card),
+        );
+
+        element = element.push(Space::with_height(10));
+
+        element.into()
+    }
+
     pub fn update(&mut self, message: AccountsMessage) -> Task<AppMessage> {
         let mut commands = Vec::new();
         match message {
@@ -311,6 +423,9 @@ impl Accounts {
             AccountsMessage::AddAccountView => {
                 self.add_account_view_visible = true;
             }
+            AccountsMessage::TransferMoneyView => {
+                self.money_transfer_view_visible = true;
+            }
             AccountsMessage::NewBankAccountNameChanged(value) => {
                 self.form_new_account_name_value = value;
             }
@@ -318,7 +433,7 @@ impl Accounts {
             AccountsMessage::NewBankAccountInitialValueChanged(value) => {
                 log::info!("value: {:?}", value);
                 if value == "" {
-                    self.form_new_account_initial_value = "".to_string();
+                    self.form_new_account_initial_value = String::default();
                     self.new_account_initial_value = 0.;
                 }
                 match value.parse::<f32>() {
@@ -398,6 +513,71 @@ impl Accounts {
                         log::error!("Initial balance not found");
                     }
                 }
+            }
+            AccountsMessage::TransferFromAccountChanged(selected) => {
+                self.transfer_from_account = Some(selected)
+            }
+            AccountsMessage::TransferToAccountChanged(selected) => {
+                self.transfer_to_account = Some(selected)
+            }
+            AccountsMessage::TransferAmountChanged(new_amount) => {
+                if new_amount.is_empty() {
+                    self.transfer_amount = 0.0;
+                    self.transfer_form_amount = new_amount;
+                } else {
+                    match new_amount.parse::<f32>() {
+                        Ok(parsed_amount) => {
+                            self.transfer_amount = parsed_amount;
+                            self.transfer_form_amount = new_amount;
+                        }
+                        Err(_) => {
+                            eprintln!("Failed to parse the amount: {}", new_amount);
+                        }
+                    }
+                }
+            }
+            AccountsMessage::TransferSubmitted => {
+                log::info!("transfer money");
+                let mut store = STORE.lock().unwrap();
+
+                let from_account = self.accounts.get(self.transfer_from_account.unwrap());
+                let to_account = self.accounts.get(self.transfer_to_account.unwrap());
+
+                if from_account.is_some() && to_account.is_some() {
+                    let new_account_transfer = NewAccountTransfer {
+                        from_account: from_account.unwrap().id,
+                        to_account: to_account.unwrap().id,
+                        amount: self.transfer_amount,
+                        transfer_date: NaiveDateTime::from_timestamp(self.transfer_date, 0),
+                        description: if self.transfer_description.is_empty() {
+                            None
+                        } else {
+                            Some(self.transfer_description.clone())
+                        },
+                    };
+                    let _ = store.create_account_transfer(&new_account_transfer);
+                } //TODO else show error toast
+
+                self.transfer_amount = 0.;
+                self.transfer_form_amount = String::default();
+                self.transfer_from_account = Some(0);
+                self.transfer_to_account = Some(1);
+                self.money_transfer_view_visible = false;
+
+                commands.push(Task::perform(async {}, |_| AppMessage::UpdateAllPages));
+            }
+            AccountsMessage::TransferCancel => {
+                self.transfer_amount = 0.;
+                self.transfer_form_amount = String::default();
+                self.transfer_from_account = Some(0);
+                self.transfer_to_account = Some(1);
+                self.money_transfer_view_visible = false;
+            }
+            AccountsMessage::TransferDateChanged(date) => {
+                self.transfer_date = date;
+            }
+            AccountsMessage::TransferDescriptionChanged(description) => {
+                self.transfer_description = description;
             }
         }
         Task::batch(commands)

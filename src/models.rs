@@ -1,4 +1,5 @@
 use crate::schema::account;
+use crate::schema::account_transfer;
 use crate::schema::category;
 use crate::schema::money_transaction;
 use diesel::prelude::*;
@@ -141,4 +142,26 @@ impl AsRef<str> for Currency {
     fn as_ref(&self) -> &str {
         &self.label
     }
+}
+
+#[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
+#[diesel(table_name = account_transfer)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct AccountTransfer {
+    pub id: i32,
+    pub from_account: i32,
+    pub to_account: i32,
+    pub transfer_date: chrono::NaiveDateTime,
+    pub amount: f32,
+    pub description: Option<String>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = account_transfer)]
+pub struct NewAccountTransfer {
+    pub from_account: i32,
+    pub to_account: i32,
+    pub transfer_date: chrono::NaiveDateTime,
+    pub amount: f32,
+    pub description: Option<String>,
 }

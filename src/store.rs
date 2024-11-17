@@ -2,7 +2,7 @@ use crate::{
     errors::DataStoreError,
     get_database_url,
     models::{self, Account, NewAccount},
-    schema::{self, account, category, money_transaction},
+    schema::{self, account, account_transfer, category, money_transaction},
 };
 use chrono::NaiveDate;
 use diesel::prelude::*;
@@ -10,6 +10,7 @@ use diesel::result::Error as DieselError;
 use diesel::{Connection, RunQueryDsl, SelectableHelper, SqliteConnection};
 use models::*;
 use schema::account::dsl::*;
+use schema::account_transfer::dsl::*;
 use schema::category::dsl::*;
 use schema::currency::dsl::*;
 use schema::money_transaction::dsl::*;
@@ -108,6 +109,27 @@ impl Store {
                 if t.is_expense {
                     total -= t.amount;
                 } else {
+                    total += t.amount;
+                }
+            }
+        }
+
+        // read all transfer on that account
+        let transfers = account_transfer
+            .filter(
+                account_transfer::from_account
+                    .eq(account_id)
+                    .or(account_transfer::to_account.eq(account_id)),
+            )
+            .select(AccountTransfer::as_select())
+            .load(&mut self.connection);
+
+        if let Ok(transfers) = transfers {
+            for t in transfers {
+                if t.from_account == account_id {
+                    total -= t.amount;
+                }
+                if t.to_account == account_id {
                     total += t.amount;
                 }
             }
@@ -315,6 +337,51 @@ impl Store {
             Ok(currency_symbol) => Ok(currency_symbol),
             Err(e) => Err(DataStoreError::QueryError(e.to_string())),
         }
+    }
+
+    pub fn get_transfers(&mut self) -> Result<Vec<AccountTransfer>, DataStoreError> {
+        let results = account_transfer
+            .select(AccountTransfer::as_select())
+            .load(&mut self.connection);
+
+        match results {
+            Ok(results) => return Ok(results),
+            Err(e) => return Err(DataStoreError::QueryError(e.to_string())),
+        }
+    }
+
+    pub fn get_transfers_date_range(
+        &mut self,
+        start_date: &NaiveDate,
+        end_date: &NaiveDate,
+    ) -> Result<Vec<AccountTransfer>, DataStoreError> {
+        let results = account_transfer
+            .filter(
+                transfer_date.between(start_date.and_hms(0, 0, 0), end_date.and_hms(23, 59, 59)),
+            )
+            .select(AccountTransfer::as_select())
+            .order(transfer_date.desc())
+            .load(&mut self.connection);
+
+        match results {
+            Ok(results) => Ok(results),
+            Err(e) => Err(DataStoreError::QueryError(e.to_string())),
+        }
+    }
+
+    pub fn create_account_transfer(
+        &mut self,
+        new_account_transfer: &NewAccountTransfer,
+    ) -> Result<(), DataStoreError> {
+        let res = diesel::insert_into(account_transfer::table)
+            .values(new_account_transfer)
+            .execute(&mut self.connection);
+
+        if let Err(e) = res {
+            return Err(DataStoreError::InsertError(e.to_string()));
+        }
+
+        Ok(())
     }
 
     pub fn drop_all(&mut self) -> Result<(), DataStoreError> {

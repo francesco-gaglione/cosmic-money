@@ -4,9 +4,19 @@ diesel::table! {
     account (id) {
         id -> Integer,
         name -> Text,
-        account_type -> Text,
         account_description -> Text,
         initial_balance -> Float,
+    }
+}
+
+diesel::table! {
+    account_transfer (id) {
+        id -> Integer,
+        from_account -> Integer,
+        to_account -> Integer,
+        transfer_date -> Timestamp,
+        description -> Nullable<Text>,
+        amount -> Float,
     }
 }
 
@@ -44,6 +54,7 @@ diesel::joinable!(money_transaction -> category (transaction_category));
 
 diesel::allow_tables_to_appear_in_same_query!(
     account,
+    account_transfer,
     category,
     currency,
     money_transaction,
