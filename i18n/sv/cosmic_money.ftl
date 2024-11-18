@@ -16,7 +16,6 @@ welcome-message = Konfigurera ditt program
 currency-message = Välj din standard valuta
 welcome-income-categories = Inkomstkategorier
 welcome-expense-categories = Utgiftskategorier
-use-suggested = Använd rekommenderad
 welcome-initial-accounts = Inledande konton
 welcome-import-message = Om du har en datafil kan du importera den
 setup = Ställ in
@@ -34,6 +33,7 @@ shopping = Shopping
 home = Hem
 subscriptions = Prenumerationer
 travel = Resa
+
 bank-account = Bankkonto
 cash = Kontanter
 
@@ -45,6 +45,7 @@ page_settings = Inställningar
 balance = Balans
 description = Beskrivning
 
+# Kontosida
 add-account = Lägg till konto
 new-account = Nytt konto
 account-name = Kontonamn
@@ -53,6 +54,10 @@ bank-account = Bank konto
 initial-value = Initialt värde
 no-elements = Inga element i denna lista
 total-balance = Total balans: {$balance} {$currency}
+transfer = Överföring av pengar
+from = Från:
+to = Till:
+confirm = Bekräfta
 
 view-settings = Visa inställningar
 add-category = Lägg till kategori
@@ -65,8 +70,10 @@ expense-categories = Utgiftskategorier
 expenses-period = Kostnader per period
 income-period = Inkomst per period
 
+# Transaktionssida 
 transactions = Transaktioner
-add-transaction = Lägg till till transaktion
+transfers = Överföringar
+add-transaction = Lägg till transaktion
 category = Kategori
 amount = Summa
 income = Inkomst
