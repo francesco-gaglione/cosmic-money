@@ -14,6 +14,7 @@ page-welcome = Välkommen
 welcome-title-message = Välkommen till Cosmic Money!
 welcome-message = Konfigurera ditt program
 currency-message = Välj din standard valuta
+use-suggested = Använd rekommenderad
 welcome-income-categories = Inkomstkategorier
 welcome-expense-categories = Utgiftskategorier
 welcome-initial-accounts = Inledande konton
