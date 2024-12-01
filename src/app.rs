@@ -16,7 +16,7 @@ use cosmic::dialog::file_chooser::{self, FileFilter};
 use cosmic::iced::{Alignment, Length, Padding, Subscription};
 use cosmic::widget::about::About;
 use cosmic::widget::{self, menu, nav_bar, ToastId};
-use cosmic::{cosmic_config, cosmic_theme, theme, Application, ApplicationExt, Element};
+use cosmic::{cosmic_config, cosmic_theme, Application, ApplicationExt, Element};
 use futures_util::FutureExt;
 
 pub const QUALIFIER: &str = "com";
@@ -139,7 +139,7 @@ impl Application for MoneyManager {
         let about = cosmic::widget::about::About::default()
             .name(fl!("app-title"))
             .icon(Self::APP_ID)
-            .version("0.2.1")
+            .version("0.3.1")
             .author("Francesco Pio Gaglione")
             .license("GPL-3.0")
             .links([
