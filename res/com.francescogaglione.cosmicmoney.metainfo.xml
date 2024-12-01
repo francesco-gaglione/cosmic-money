@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <component type="desktop-application">
   <id>com.francescogaglione.cosmicmoney</id>
   <metadata_license>CC0-1.0</metadata_license>
@@ -9,17 +9,27 @@
    </developer>
   <update_contact>francesco.gaglione.p@gmail.com</update_contact>
   <url type="homepage">https://github.com/francesco-gaglione/cosmic-money</url>
-  <url type="bugtracker">https://github.com/francesco-gaglione/cosmic-money/issues</url>
+  <url
+        type="bugtracker"
+    >https://github.com/francesco-gaglione/cosmic-money/issues</url>
   <name>Cosmic money</name>
   <summary>Simple money manager</summary>
   <description>
-    <p>A simple and intuitive money manager designed for the COSMIC desktop environment. Easily track expenses, manage budgets, and monitor financial health all in one place.</p>
+    <p
+        >A simple and intuitive money manager designed for the COSMIC desktop environment. Easily track expenses, manage budgets, and monitor financial health all in one place.</p>
   </description>
-  <launchable type="desktop-id">com.francescogaglione.cosmicmoney.desktop</launchable>
-  <icon type="remote" height="256" width="256">https://github.com/francesco-gaglione/cosmic-money/blob/main/res/icons/hicolor/256x256/apps/com.francescogaglione.cosmicmoney.png?raw=true</icon>
+  <launchable
+        type="desktop-id"
+    >com.francescogaglione.cosmicmoney.desktop</launchable>
+  <icon
+        type="remote"
+        height="256"
+        width="256"
+    >https://github.com/francesco-gaglione/cosmic-money/blob/main/res/icons/hicolor/256x256/apps/com.francescogaglione.cosmicmoney.png?raw=true</icon>
   <screenshots>
     <screenshot type="default">
-      <image>https://github.com/francesco-gaglione/cosmic-money/blob/main/res/screenshots/categories.png?raw=true</image>
+      <image
+            >https://github.com/francesco-gaglione/cosmic-money/blob/main/res/screenshots/categories.png?raw=true</image>
       <caption>Categories</caption>
     </screenshot>
   </screenshots>
@@ -29,6 +39,18 @@
   </provides>
   <content_rating type="oars-1.1" />
   <releases>
+      <release version="0.3.1" date="2024-12-01">
+        <description>
+          <p>Bug fixes</p>
+          <ul>
+            <li>Fix transactions read in last month of the year</li>
+          </ul>
+          <p>Improvements</p>
+          <ul>
+            <li>Update Swedish translation</li>
+          </ul>
+        </description>
+      </release>
       <release version="0.3.0" date="2024-11-17">
         <description>
           <p>- Swedish translation</p>
