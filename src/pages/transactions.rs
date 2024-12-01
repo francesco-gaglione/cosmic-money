@@ -75,7 +75,6 @@ impl Default for Transactions {
         let transfers = store
             .get_transfers_date_range(&start_date, &end_date)
             .unwrap_or_else(|_| vec![]);
-        log::info!("transfers date rage: {:?}", transfers);
         let currency_symbol = store.get_currency_symbol_by_id(config.1.currency_id);
         let all_categories = store.get_categories().unwrap_or_else(|_| vec![]);
         let categories = all_categories
