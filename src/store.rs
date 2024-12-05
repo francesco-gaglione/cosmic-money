@@ -60,6 +60,43 @@ impl Store {
             .map_err(|e| DataStoreError::InsertError(e.to_string()))
     }
 
+    pub fn update_transaction(
+        &mut self,
+        updated_transaction: &UpdateTransaction,
+    ) -> Result<(), DataStoreError> {
+        self.connection
+            .transaction::<_, DieselError, _>(|conn| {
+                diesel::update(money_transaction::table)
+                    .filter(money_transaction::id.eq(updated_transaction.id))
+                    .set((
+                        money_transaction::bank_account.eq(updated_transaction.bank_account),
+                        money_transaction::transaction_category
+                            .eq(updated_transaction.transaction_category),
+                        money_transaction::description.eq(&updated_transaction.description),
+                        money_transaction::amount.eq(updated_transaction.amount),
+                        money_transaction::transaction_date
+                            .eq(updated_transaction.transaction_date),
+                        money_transaction::is_expense.eq(updated_transaction.is_expense),
+                    ))
+                    .execute(conn)?;
+
+                Ok(())
+            })
+            .map_err(|e| DataStoreError::UpdateError(e.to_string()))
+    }
+
+    pub fn delete_transaction(&mut self, transaction_id: &i32) -> Result<(), DataStoreError> {
+        self.connection
+            .transaction::<_, DieselError, _>(|conn| {
+                diesel::delete(money_transaction::table)
+                    .filter(money_transaction::id.eq(transaction_id))
+                    .execute(conn)?;
+
+                Ok(())
+            })
+            .map_err(|e| DataStoreError::DeleteError(e.to_string()))
+    }
+
     pub fn update_account(&mut self, update_account: &UpdateAccount) -> Result<(), DataStoreError> {
         use schema::account::dsl::*;
 

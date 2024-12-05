@@ -13,4 +13,7 @@ pub enum DataStoreError {
 
     #[error("Error happened on database update: {0}")]
     UpdateError(String),
+
+    #[error("Error happened on database delete: {0}")]
+    DeleteError(String),
 }

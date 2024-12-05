@@ -116,6 +116,18 @@ pub struct NewMoneyTransaction {
     pub is_expense: bool,
 }
 
+#[derive(Insertable)]
+#[diesel(table_name = money_transaction)]
+pub struct UpdateTransaction {
+    pub id: i32,
+    pub bank_account: i32,
+    pub transaction_category: i32,
+    pub description: String,
+    pub amount: f32,
+    pub transaction_date: chrono::NaiveDateTime,
+    pub is_expense: bool,
+}
+
 impl From<&MoneyTransaction> for NewMoneyTransaction {
     fn from(value: &MoneyTransaction) -> Self {
         Self {

@@ -82,6 +82,8 @@ expense = Expense
 note = Note
 not-found = Not found
 date = Date
+edit-transaction = Edit transaction
+delete-transaction = Delete transaction
 
 month-1 = January
 month-2 = February

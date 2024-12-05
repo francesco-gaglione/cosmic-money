@@ -13,7 +13,10 @@ use crate::{
     app::AppMessage,
     config::Config,
     fl,
-    models::{Account, AccountTransfer, Category, MoneyTransaction, NewMoneyTransaction},
+    models::{
+        Account, AccountTransfer, Category, MoneyTransaction, NewMoneyTransaction,
+        UpdateTransaction,
+    },
     utils::dates::get_month_date_range,
     widget::date_picker::date_picker,
     STORE,
@@ -31,6 +34,7 @@ pub enum TransactionMessage {
     FormCategoryChanged(usize),
     FormBankAccountChanged(usize),
     FormTransactionTypeChanged(widget::segmented_button::Entity),
+    FormEditTransactionTypeChanged(widget::segmented_button::Entity),
     FormNoteChanged(String),
     FormAmountChanged(String),
     FormDateChanged(i64),
@@ -39,6 +43,15 @@ pub enum TransactionMessage {
     PreviousMonth,
     NextMonth,
     ViewChanged(segmented_button::Entity),
+    EditTransaction(i32),
+    FormEditAmountChanged(String),
+    FormEditDateChanged(i64),
+    FormEditCategoryChanged(usize),
+    FormEditBankAccountChanged(usize),
+    FormEditNoteChanged(String),
+    SubmitEditTransaction(i32),
+    CancelEditTransaction,
+    DeleteTransaction(i32),
 }
 
 pub struct Transactions {
@@ -60,6 +73,14 @@ pub struct Transactions {
     view_month: u32,
     view_year: i32,
     view_selection: widget::segmented_button::SingleSelectModel,
+    edit_transaction: Option<i32>,
+    form_edit_transaction_type: widget::segmented_button::SingleSelectModel,
+    form_edit_amount: String,
+    edit_amout: f32,
+    form_edit_date: i64,
+    form_edit_selectected_category: Option<usize>,
+    form_edit_selected_bank_account: Option<usize>,
+    form_edit_note: String,
 }
 
 impl Default for Transactions {
@@ -106,12 +127,12 @@ impl Default for Transactions {
                 .insert(|b| b.text(fl!("expense")).data(1u16).activate())
                 .insert(|b| b.text(fl!("income")).data(2u16))
                 .build(),
-            form_note: "".to_string(),
+            form_note: String::default(),
             form_selectected_category: Some(0),
             form_selected_bank_account: Some(0),
             transactions,
             transfers,
-            form_amount: "".to_string(),
+            form_amount: String::default(),
             form_date: Utc::now().timestamp(),
             new_transaction_amount: 0.,
             view_month: now.month(),
@@ -125,6 +146,17 @@ impl Default for Transactions {
                 .insert(|b| b.text(fl!("transfers")).data(ViewItem::Transfers))
                 .build()
                 .into(),
+            edit_transaction: None,
+            form_edit_transaction_type: widget::segmented_button::Model::builder()
+                .insert(|b| b.text(fl!("expense")).data(1u16).activate())
+                .insert(|b| b.text(fl!("income")).data(2u16))
+                .build(),
+            form_edit_amount: String::default(),
+            edit_amout: 0.,
+            form_edit_date: Utc::now().timestamp(),
+            form_edit_selectected_category: Some(0),
+            form_edit_selected_bank_account: Some(0),
+            form_edit_note: String::default(),
         }
     }
 }
@@ -232,55 +264,68 @@ impl Transactions {
                 }
                 element = element.push_maybe(date_row);
                 let container = widget::container(
-                    widget::column()
-                        .push(
-                            widget::row()
-                                .push(
-                                    widget::text::text(format!(
-                                        "{}: {}{} {}",
-                                        fl!("amount"),
-                                        if t.is_expense { "-" } else { "+" },
-                                        t.amount,
-                                        self.currency_symbol
-                                    ))
+                    if self.edit_transaction.is_some() && self.edit_transaction.unwrap() == t.id {
+                        widget::row().push(self.edit_transaction_view(&t))
+                    } else {
+                        widget::row()
+                            .push(
+                                widget::column()
+                                    .push(
+                                        widget::row()
+                                            .push(
+                                                widget::text::text(format!(
+                                                    "{}: {}{} {}",
+                                                    fl!("amount"),
+                                                    if t.is_expense { "-" } else { "+" },
+                                                    t.amount,
+                                                    self.currency_symbol
+                                                ))
+                                                .width(Length::Fill),
+                                            )
+                                            .push(
+                                                widget::text::text(format!(
+                                                    "{}: {}",
+                                                    fl!("category"),
+                                                    self.categories
+                                                        .iter()
+                                                        .find(|c| c.id == t.transaction_category)
+                                                        .map(|c| c.name.clone())
+                                                        .unwrap_or_else(|| fl!("not-found"))
+                                                ))
+                                                .width(Length::Fill),
+                                            )
+                                            .push(
+                                                widget::text::text(format!(
+                                                    "{}: {}",
+                                                    fl!("date"),
+                                                    Local
+                                                        .from_utc_datetime(&t.transaction_date)
+                                                        .format("%d-%m-%Y %H:%M")
+                                                        .to_string()
+                                                ))
+                                                .width(Length::Fill),
+                                            )
+                                            .width(Length::Fill),
+                                    )
+                                    .push(Space::with_height(5))
+                                    .push_maybe(if !t.description.is_empty() {
+                                        Some(widget::row().push(widget::text::text(format!(
+                                            "{}: {}",
+                                            fl!("note"),
+                                            t.description
+                                        ))))
+                                    } else {
+                                        None
+                                    })
                                     .width(Length::Fill),
-                                )
-                                .push(
-                                    widget::text::text(format!(
-                                        "{}: {}",
-                                        fl!("category"),
-                                        self.categories
-                                            .iter()
-                                            .find(|c| c.id == t.transaction_category)
-                                            .map(|c| c.name.clone())
-                                            .unwrap_or_else(|| fl!("not-found"))
-                                    ))
-                                    .width(Length::Fill),
-                                )
-                                .push(
-                                    widget::text::text(format!(
-                                        "{}: {}",
-                                        fl!("date"),
-                                        Local
-                                            .from_utc_datetime(&t.transaction_date)
-                                            .format("%d-%m-%Y %H:%M")
-                                            .to_string()
-                                    ))
-                                    .width(Length::Fill),
-                                )
-                                .width(Length::Fill),
-                        )
-                        .push(Space::with_height(5))
-                        .push_maybe(if !t.description.is_empty() {
-                            Some(widget::row().push(widget::text::text(format!(
-                                "{}: {}",
-                                fl!("note"),
-                                t.description
-                            ))))
-                        } else {
-                            None
-                        })
-                        .width(Length::Fill),
+                            )
+                            .push(
+                                widget::column().push(
+                                    widget::button::icon(widget::icon::from_name("edit-symbolic"))
+                                        .on_press(TransactionMessage::EditTransaction(t.id)),
+                                ),
+                            )
+                    },
                 )
                 .width(Length::Fill)
                 .padding(Padding::new(10.))
@@ -486,6 +531,92 @@ impl Transactions {
         element.into()
     }
 
+    //TODO data env events are wrong
+    pub fn edit_transaction_view<'a>(
+        &'a self,
+        transaction: &MoneyTransaction,
+    ) -> Element<'a, TransactionMessage> {
+        let mut element = widget::column().width(Length::Fill);
+
+        element = element
+            .push(widget::text::title3(fl!("edit-transaction")))
+            .push(Space::with_height(10))
+            .push(
+                widget::segmented_control::horizontal(&self.form_edit_transaction_type)
+                    .on_activate(TransactionMessage::FormEditTransactionTypeChanged),
+            )
+            .push(Space::with_height(10))
+            .push(
+                widget::column()
+                    .push(widget::text::text(fl!("amount")))
+                    .push(
+                        text_input(fl!("amount"), &self.form_edit_amount)
+                            .width(Length::Fill)
+                            .on_input(TransactionMessage::FormEditAmountChanged),
+                    ),
+            )
+            .push(Space::with_height(10))
+            .push(widget::text::text(fl!("date")))
+            .push(Space::with_height(5))
+            .push(date_picker(self.form_edit_date, |date| {
+                TransactionMessage::FormEditDateChanged(date)
+            }))
+            .push(Space::with_height(10))
+            .push(
+                widget::row()
+                    .push(
+                        widget::column()
+                            .push(widget::text::text(fl!("category")))
+                            .push(Space::with_height(Length::from(5)))
+                            .push(widget::dropdown(
+                                &self.categories,
+                                self.form_edit_selectected_category,
+                                TransactionMessage::FormEditCategoryChanged,
+                            )),
+                    )
+                    .push(Space::with_width(Length::from(20)))
+                    .push(
+                        widget::column()
+                            .push(widget::text::text(fl!("bank-account")))
+                            .push(widget::dropdown(
+                                &self.accounts,
+                                self.form_edit_selected_bank_account,
+                                TransactionMessage::FormEditBankAccountChanged,
+                            )),
+                    ),
+            )
+            .push(
+                column().push(widget::text::text(fl!("note"))).push(
+                    text_input(fl!("note"), &self.form_edit_note)
+                        .width(Length::Fill)
+                        .on_input(TransactionMessage::FormEditNoteChanged),
+                ),
+            )
+            .push(widget::vertical_space().height(Length::from(10)))
+            .push(
+                widget::row()
+                    .push(
+                        widget::button::text(fl!("edit-transaction"))
+                            .on_press(TransactionMessage::SubmitEditTransaction(transaction.id))
+                            .class(widget::button::ButtonClass::Suggested),
+                    )
+                    .push(widget::horizontal_space().width(Length::from(10)))
+                    .push(
+                        widget::button::text(fl!("cancel"))
+                            .on_press(TransactionMessage::CancelEditTransaction)
+                            .class(widget::button::ButtonClass::Destructive),
+                    )
+                    .push(widget::horizontal_space().width(Length::from(10)))
+                    .push(
+                        widget::button::text(fl!("delete-transaction"))
+                            .on_press(TransactionMessage::DeleteTransaction(transaction.id))
+                            .class(widget::button::ButtonClass::Destructive),
+                    ),
+            );
+
+        element.into()
+    }
+
     pub fn update(&mut self, message: TransactionMessage) -> Task<AppMessage> {
         let mut commands = Vec::new();
         match message {
@@ -632,6 +763,102 @@ impl Transactions {
             }
             TransactionMessage::ViewChanged(entity) => {
                 self.view_selection.activate(entity);
+            }
+            TransactionMessage::EditTransaction(transaction_id) => {
+                self.edit_transaction = Some(transaction_id);
+                match self.transactions.iter().find(|t| t.id == transaction_id) {
+                    Some(transaction) => {
+                        self.form_edit_amount = transaction.amount.to_string();
+                        self.form_edit_date = transaction.transaction_date.timestamp();
+                        self.form_edit_note = transaction.description.clone();
+                        self.form_edit_selectected_category = self
+                            .categories
+                            .iter()
+                            .position(|c| c.id == transaction.transaction_category);
+                        self.form_edit_selected_bank_account = self
+                            .accounts
+                            .iter()
+                            .position(|a| a.id == transaction.bank_account);
+                    }
+                    None => {
+                        log::error!("Transaction not found");
+                    }
+                }
+            }
+            TransactionMessage::FormEditTransactionTypeChanged(key) => {
+                self.form_edit_transaction_type.activate(key);
+            }
+            TransactionMessage::FormEditAmountChanged(new_amount) => {
+                if new_amount.is_empty() {
+                    self.edit_amout = 0.0;
+                    self.form_edit_amount = new_amount;
+                } else {
+                    match new_amount.parse::<f32>() {
+                        Ok(parsed_amount) => {
+                            self.edit_amout = parsed_amount;
+                            self.form_edit_amount = new_amount;
+                        }
+                        Err(_) => {
+                            eprintln!("Failed to parse the amount: {}", new_amount);
+                        }
+                    }
+                }
+            }
+            TransactionMessage::FormEditDateChanged(date) => {
+                log::info!("form date changed: {:?}", date);
+                self.form_edit_date = date;
+            }
+            TransactionMessage::FormEditCategoryChanged(selected) => {
+                self.form_edit_selectected_category = Some(selected)
+            }
+            TransactionMessage::FormEditBankAccountChanged(selected) => {
+                self.form_edit_selected_bank_account = Some(selected);
+            }
+            TransactionMessage::FormEditNoteChanged(note) => {
+                self.form_edit_note = note;
+            }
+            TransactionMessage::SubmitEditTransaction(transaction_id) => {
+                log::info!("submitting edit transaction");
+                let mut is_expense: bool = true;
+                if let Some(id) = self
+                    .form_edit_transaction_type
+                    .data::<u16>(self.form_edit_transaction_type.active())
+                {
+                    if id == &2 {
+                        is_expense = false;
+                    }
+                }
+
+                let update_transaction = UpdateTransaction {
+                    id: transaction_id,
+                    bank_account: self
+                        .accounts
+                        .get(self.form_edit_selected_bank_account.unwrap())
+                        .unwrap()
+                        .id,
+                    transaction_category: self
+                        .categories
+                        .get(self.form_edit_selectected_category.unwrap())
+                        .unwrap()
+                        .id,
+                    description: self.form_edit_note.clone(),
+                    amount: self.edit_amout,
+                    transaction_date: NaiveDateTime::from_timestamp(self.form_edit_date, 0),
+                    is_expense,
+                };
+                let mut store = STORE.lock().unwrap();
+                let _ = store.update_transaction(&update_transaction);
+                self.edit_transaction = None;
+                commands.push(Task::perform(async {}, |_| AppMessage::UpdateAllPages));
+            }
+            TransactionMessage::CancelEditTransaction => {
+                self.edit_transaction = None;
+            }
+            TransactionMessage::DeleteTransaction(transaction_id) => {
+                let mut store = STORE.lock().unwrap();
+                let _ = store.delete_transaction(&transaction_id);
+                self.edit_transaction = None;
+                commands.push(Task::perform(async {}, |_| AppMessage::UpdateAllPages));
             }
         }
         Task::batch(commands)
