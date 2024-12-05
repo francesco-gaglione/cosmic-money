@@ -82,6 +82,8 @@ expense = Spesa
 note = Nota
 not-found = Non trovato
 date = Data
+edit-transaction = Modifica transazione
+delete-transaction = Elimina transazione
 
 month-1 = Gennaio
 month-2 = Febbraio
